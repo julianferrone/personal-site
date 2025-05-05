@@ -9,3 +9,7 @@ tag = "tags"
 home = ["HTML"]
 section = ["HTML"]
 taxonomy = []      # disables /tags/foo/ etc.
+
+[markup]
+  [markup.highlight]
+    style = 'trac'
