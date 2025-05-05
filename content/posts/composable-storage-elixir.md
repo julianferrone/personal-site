@@ -9,11 +9,11 @@ tags:
 
 I recently came across the paper [*Storage Combinators*](https://dl.acm.org/doi/10.1145/3359591.3359729), which proposes an approach to designing storage systems by composing together modular components.
 
-The code in the paper is given in Objective Smalltalk, but I decided to build **Matryoshka**—inspired by *Storage Combinators*, but not an exact replica—in Elixir.
+The code in the paper is given in Objective Smalltalk, but I decided to build Matryoshka—inspired by *Storage Combinators*, but not an exact replica—in Elixir.
 
 In the Storage Combinators paper, the composition of different stores and store combinators is done via message passing.
 
-Originally, I chose Elixir as I thought this message passing style mapped nicely to the message passing and handling of GenServers.
+Originally I chose Elixir because I thought this message passing style mapped nicely to the message passing and handling that GenServers offer.
 
 After an early false start, I realised this approach had some issues:
 
@@ -32,9 +32,7 @@ Regardless, the ideas around concurrency that the BEAM VM and BEAM languages (Er
 
 OK, so why the name "Matryoshka"?
 
-In **Matryoshka**, I eventually elected to provide the composition functionality by wrapping stores with store combinators (more on this later).
-
-This struct composition reminded me of Russian nesting dolls, which recursively store ever smaller Russian nesting dolls inside themselves.
+I eventually elected to engineer this composition functionality by wrapping stores with store combinators (more on this later). This struct composition reminded me of Russian nesting dolls, which recursively store ever smaller Russian nesting dolls inside themselves.
 
 ## The storage protocol
 
@@ -84,7 +82,7 @@ They're such small types it makes more sense to just put a new value there inste
 
 Also, you can create the patch functionality by first getting the value, updating the value, and then putting it in—so it's arguably not even a primitive function anyways.
 
-However, I may end up adding an `update` function to the **Storage** protocol like [Map.update/4](https://hexdocs.pm/elixir/1.12/Map.html#update/4) which updates the value with a function.
+However, I may end up adding an `update` function to the Storage protocol like [Map.update/4](https://hexdocs.pm/elixir/1.12/Map.html#update/4) which updates the value with a function.
 
 Then if we want to apply a JSON Patch to a Map or List, we can create a 1-argument lambda by partially applying a JSON patch function with the desired patch operations, which will then be passed to `update`.
 
@@ -109,7 +107,7 @@ There's one last change that needs to be made when porting over the storage prot
 
 Elixir, as a functional programming language, has immutable data. To deal with changing state, we need a pure function which creates a new state from the old state.
 
-The **Storage** protocol will specify these pure functions.
+The Storage protocol will specify these pure functions.
 
 Later, we'll use a GenServer to track the changes in state.
 
@@ -162,7 +160,7 @@ defprotocol Matryoshka.Storage do
 end
 ```
 
-And now we're ready to start putting together implementations for **Storage**.
+And now we're ready to start putting together implementations for Storage.
 
 As a matter of taste, I like a tripartite approach to building out processes in Elixir:
 
@@ -210,7 +208,7 @@ The `:fetch` and `:get` messages will need to return the value (or an error/`nil
 
 Next we need to send the `:put` and `:delete` messages. I've elected to send these as casts rather than as calls.
 
-I'm aware that calls in Elixir provide useful backpressure since they're synchronous, whereas the casts (asynchronous) don't, but I'm not planning on using **Matryoshka** in a production context anyways.
+I'm aware that calls in Elixir provide useful backpressure since they're synchronous, whereas the casts (asynchronous) don't, but I'm not planning on using Matryoshka in a production context anyways.
 
 Now it's time to handle the storage messages.
 
@@ -235,7 +233,7 @@ defmodule Matryoshka.Server do
   ...
 ```
 
-The `store` provided in `init/1` here is any struct which implements the **Storage** protocol.
+The `store` provided in `init/1` here is any struct which implements the Storage protocol.
 
 You'll also notice that the name is always set to `Server` when we start the store server.
 
@@ -245,7 +243,7 @@ That way, if this were to run as an actual storage backend, we can do things lik
 
 OK, so now we need to handle the different storage messages.
 
-These just call out to the business logic in the provided store, using the **Storage** protocol to dispatch the function calls:
+These just call out to the business logic in the provided store, using the Storage protocol to dispatch the function calls:
 
 ```elixir {linenos=inline linenostart=14 title="/lib/matryoshka/mapstore/server.ex"}
   ...
@@ -354,7 +352,7 @@ end
 
 In *Storage Combinators*, **PassThrough** is a useful object as other store combinators can inherit from it, reusing the functionality of passing storage requests through to other stores.
 
-In **Matryoshka**, it's completely useless, as there's no such thing as class inheritance in Elixir. We'll need to write the code for storage combinators passing requests to their inner stores by hand.
+In Matryoshka, it's completely useless, as there's no such thing as class inheritance in Elixir. We'll need to write the code for storage combinators passing requests to their inner stores by hand.
 
 But we'll build it anyways just to get a feel for what a **storage combinator** looks like.
 
@@ -382,7 +380,7 @@ defmodule Matryoshka.Impl.PassThrough do
   ...
 ```
 
-and then implement the **Storage** protocol methods.
+and then implement the Storage protocol methods.
 
 `fetch/2` and `get/2` just call into the inner store:
 
@@ -448,7 +446,7 @@ defmodule Matryoshka.Impl.LoggingStore do
   ...
 ```
 
-And then we'll define the four **Storage** functions—`fetch/2`, `get/2`, `put/3`, and `delete/2`.
+And then we'll define the four Storage functions—`fetch/2`, `get/2`, `put/3`, and `delete/2`.
 
 `fetch/2` and `get/2` will once again compute their results by just calling to the inner store using Storage. We'll then log the results using structured log messages.
 
@@ -528,7 +526,7 @@ defmodule Matryoshka do
 end
 ```
 
-This just allows developers to use **Matryoshka** in a more ergonomic way, by importing or aliasing only this one module, hiding the implementation logic.
+This just allows developers to use Matryoshka in a more ergonomic way, by importing or aliasing only this one module, hiding the implementation logic.
 
 ## Matryoshka in action
 
@@ -560,10 +558,6 @@ Matryoshka.get("key")
 #=> nil
 ```
 
-In the next post, I'll add some more stores and store combinators to **Matryoshka** to make it more useful.
+In the next post in this series, I'll add some more stores and store combinators to Matryoshka to make it more useful.
 
-You can see the latest version of **Matryoshka** at [my GitHub](https://github.com/julianferrone/matryoshka).
-
-## References
-
-Weiher, M., & Hirschfeld, R. (2019). **Storage combinators**. _Proceedings of the 2019 ACM SIGPLAN International Symposium on New Ideas, New Paradigms, and Reflections on Programming and Software_, 111–127. [![DOI:10.1145/3359591.3359729](https://camo.githubusercontent.com/c457178dd736b60872309d95720942554912fad902d90a11868cd47a914c046a/68747470733a2f2f7a656e6f646f2e6f72672f62616467652f444f492f31302e313134352f333335393539312e333335393732392e737667)](https://doi.org/10.1145/3359591.3359729)
+You can see the latest version of Matryoshka at [my GitHub](https://github.com/julianferrone/matryoshka).
