@@ -7,7 +7,9 @@
 **************/
 
 :root {
+    --white: #ffffff;
     --stone: #f6f5f5;
+    --light-grey: #d3d0ce;
     --grey: #746d66;
     --black: #1F1E1C;
     --red: #CA0020;
@@ -117,8 +119,36 @@ body {
 }
 
 /***********************************************************
+************************** Tables **************************
+***********************************************************/
+
+table {
+    border-collapse: collapse; /* Ensures borders don't double up */
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+th, td {
+    border: 1px solid var(--grey);    /* Adds the actual outline */
+    padding: 0.5rem;
+    text-align: left;
+}
+td {
+    background-color: var(--white);
+}
+
+th {
+    background-color: var(--light-grey);
+}
+
+
+/***********************************************************
 ************************ Code Blocks ***********************
 ***********************************************************/
+
+pre {
+    padding: 1rem;
+}
 
 code {
     font-family: "Berkeley Mono", monospace;
@@ -128,9 +158,10 @@ p>code,
 li>code,
 dd>code,
 td>code {
-    background: #ffeff0;
+    background-color: var(--light-grey);
     word-wrap: break-word;
     box-decoration-break: clone;
-    padding: .1rem .3rem .2rem;
+    padding-left: .1rem;
+    padding-right: .1rem;
     border-radius: .2rem;
 }
