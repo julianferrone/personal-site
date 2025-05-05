@@ -1,6 +1,6 @@
 {{ define "main" }}
 {{ $taxonomy := .Site.Taxonomies.tags }}
-<nav id="TableOfContents">
+<nav>
     <ul>
         {{ range $tag, $_ := $taxonomy }}
         {{ $href := add "/tags#" $tag }}
