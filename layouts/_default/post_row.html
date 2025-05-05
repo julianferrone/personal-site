@@ -1,0 +1,17 @@
+<div class="post-row">
+    <div class="post-date">{{ .Date.Format "2006-01-02" }}</div>
+    <div class="post-title">
+        <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+    </div>
+    <div class="post-tags">
+        <ul>
+
+            {{ range sort .Params.tags }}
+            {{ $href := add "../tags#" . }}
+            <li>
+                <a href="{{ $href }}">{{ . }}</a>
+            </li>
+            {{ end }}
+        </ul>
+    </div>
+</div>
