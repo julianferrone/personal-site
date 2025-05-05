@@ -18,19 +18,19 @@ In short, I fix things.
 
 *University of Technology, Sydney* 2018–2021
 
-In my business degree, I majored in Finance and submajored in Marketing and Law. I particularly enjoyed courses on systems thinking, financial derivatives, intellectual property law, and transdisciplinary innovation.
+In my business degree, I majored in Finance and sub-majored in Marketing and Law. I particularly enjoyed courses on systems thinking, financial derivatives, intellectual property law, and transdisciplinary innovation.
   
 ## Expertise
 
-**Programming**: I've been writing Python for 11 years—5 in a professional context. In my home projects, I prefer to use Rust, Haskell, Elixir, all of which I'm quite comfortable with.
+**Programming**: I've been writing Python for 11 years—5 in a professional context. In my home projects, I prefer to use Rust, Haskell, Elixir, all of which I'm very comfortable with. I believe in the pursuit of quality, so I'm always studying to improve my craft.
 
-**Consulting**: Between my innovation work with BCII partners and my client-facing roles, I'm 
+**Consulting**: Between my innovation work with BCII partners and my client-facing roles, I'm very good at working with clients and solving problems.
 
 ## Enthusiasm
 
 I believe that the key to a well-rounded life is to target the ideal of the Renaissance Man—modelled by the *PISA* (Physical, Intellectual, Social, Artistic) approach.
 
-**Fencing**: The first sport I ever enjoyed. There's a silence that falls over you in a good bout. The world shrinks down. You, your opponent, the piste you stand on, and your blades. You probe each other for weaknesses, you maneuver back and forth, you see a little window of opportunity open up, get inside your opponents' tempo, you strike, you score! Pure flow state. It's absolutely exhilarating.
+**Fencing**: The first sport I ever enjoyed. There's a silence that falls over you in a good bout. The world shrinks down to you, your opponent, the piste you stand on, and your blades. You probe each other for weaknesses, you maneuver back and forth, you see a little window of opportunity open up, get inside your opponents' tempo, you strike, you score! Pure flow state. It's absolutely exhilarating.
 
 **Chess**: I play chess casually. My lack of opening prep has hurt my online ELO, but the daily puzzles are a good brain workout.
 
