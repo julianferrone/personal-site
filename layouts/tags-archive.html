@@ -1,11 +1,4 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-    <meta charset="UTF-8">
-    <title>{{ .Title }}</title>
-</head>
-
+{{ define "main" }}
 <body>
     <h1>{{ .Title }}</h1>
     {{ range $tag, $pages := .Site.Taxonomies.tags }}
@@ -19,5 +12,4 @@
     </ul>
     {{ end }}
 </body>
-
-</html>
+{{ end }}
