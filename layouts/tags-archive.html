@@ -3,11 +3,11 @@
 <body>
     {{ range $tag, $pages := .Site.Taxonomies.tags }}
     <h2 id="{{ $tag | urlize }}">{{ $tag }}</h2>
-    <ul>
+    <div>
         {{ range $pages }}
             {{.Render "post_row" }}
         {{ end }}
-    </ul>
+    </div>
     {{ end }}
 </body>
 {{ end }}
