@@ -1,6 +1,6 @@
 ---
 date: '2025-05-05T10:18:45+10:00'
-draft: true
+draft: false
 title: 'Matryoshka 1: Composable Storage in Elixir'
 tags:
 - elixir
@@ -480,14 +480,14 @@ We implement `put/3` and `delete/2` to:
 ```elixir {linenos=inline linenostart=34 title="/lib/matryoshka/impl/logging_store.ex"}
     ...
     def put(store, ref, value) do
-      Logger.info([request: "PUT", ref: ref, value: value])
       inner = Storage.put(store.inner, ref, value)
+      Logger.info([request: "PUT", ref: ref, value: value])
       LoggingStore.logging_store(inner)
     end
 
     def delete(store, ref) do
-      Logger.info([request: "DELETE", ref: ref])
       inner = Storage.delete(store.inner, ref)
+      Logger.info([request: "DELETE", ref: ref])
       LoggingStore.logging_store(inner)
     end
   end
@@ -562,7 +562,7 @@ Matryoshka.get("key")
 
 In the next post, I'll add some more stores and store combinators to **Matryoshka** to make it more useful.
 
-You can see the latest version of **Matryoshka** at [my GitHub](github.com/julianferrone/matryoshka).
+You can see the latest version of **Matryoshka** at [my GitHub](https://github.com/julianferrone/matryoshka).
 
 ## References
 
