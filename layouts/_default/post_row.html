@@ -4,8 +4,8 @@
         <a href="{{ .RelPermalink }}">{{ .Title }}</a>
     </div>
     <div class="post-tags">
+        {{ if .Params.tags }}
         <ul>
-
             {{ range sort .Params.tags }}
             {{ $href := add "../tags#" . }}
             <li>
@@ -13,5 +13,6 @@
             </li>
             {{ end }}
         </ul>
+        {{ end }}
     </div>
 </div>
