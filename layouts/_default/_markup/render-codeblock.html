@@ -1,0 +1,9 @@
+<div class="code">
+    {{ if .Attributes.title }}
+    <p class="filename">
+        {{ .Attributes.title }}
+    </p>
+    {{ end }}
+    {{ $result := transform.HighlightCodeBlock . }}
+    {{ $result.Wrapped }}
+</div>
