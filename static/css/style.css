@@ -39,33 +39,34 @@ body {
 ***********************************************************/
 
 .navbar {
-    background-color: var(--black);
-}
-
-.navbar ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
     display: flex;
-    justify-content: flex-end;
-}
-
-.navbar li {
-    display: block;
-}
-
-.navbar a {
-    display: block;             /* Makes the entire area clickable */
-    padding: 0.5rem 1rem;       /* Adds space around the link */
-    color: white;
-    text-decoration: none;
+    justify-content: space-between;
+    background-color: var(--black);
+  }
+  
+  .nav-left a,
+  .nav-right a {
+    padding: 0.5rem 1rem;
     font-weight: bold;
-}
+    text-decoration: none;
+    color: var(--stone);
+    font-size: x-large;
+  }
+  
+  .nav-left {
+    display: flex;
+  }
 
-.navbar a:hover {
-    background-color: var(--stone);     /* Change entire box color on hover */
-    color: var(--black)
-}
+  .nav-right {
+    display: flex;
+  }
+  
+  .nav-left a:hover,
+  .nav-right a:hover {
+    background-color: var(--stone);
+    color: var(--black);
+  }  
+
 
 /***********************************************************
 ********************** Post Summaries **********************
@@ -123,16 +124,20 @@ body {
 ***********************************************************/
 
 table {
-    border-collapse: collapse; /* Ensures borders don't double up */
+    border-collapse: collapse;
+    /* Ensures borders don't double up */
     width: 100%;
     margin-bottom: 1rem;
 }
 
-th, td {
-    border: 1px solid var(--grey);    /* Adds the actual outline */
+th,
+td {
+    border: 1px solid var(--grey);
+    /* Adds the actual outline */
     padding: 0.5rem;
     text-align: left;
 }
+
 td {
     background-color: var(--white);
 }
@@ -184,4 +189,3 @@ a {
 a:hover {
     color: var(--red);
 }
-
