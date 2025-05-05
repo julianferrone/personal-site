@@ -42,30 +42,30 @@ body {
     display: flex;
     justify-content: space-between;
     background-color: var(--black);
-  }
-  
-  .nav-left a,
-  .nav-right a {
+}
+
+.nav-left a,
+.nav-right a {
     padding: 0.5rem 1rem;
     font-weight: bold;
     text-decoration: none;
     color: var(--stone);
     font-size: x-large;
-  }
-  
-  .nav-left {
-    display: flex;
-  }
+}
 
-  .nav-right {
+.nav-left {
     display: flex;
-  }
-  
-  .nav-left a:hover,
-  .nav-right a:hover {
+}
+
+.nav-right {
+    display: flex;
+}
+
+.nav-left a:hover,
+.nav-right a:hover {
     background-color: var(--stone);
     color: var(--black);
-  }  
+}
 
 
 /***********************************************************
@@ -188,4 +188,52 @@ a {
 
 a:hover {
     color: var(--red);
+}
+
+/***********************************************************
+******************* Floating Side Content ******************
+***********************************************************/
+
+/* Sidenote default (mobile first) */
+.sidenote {
+    display: block;
+    width: 100%;
+    margin: 2rem 0;
+    padding-left: 0;
+    text-align: left;
+    float: none;
+    clear: both;
+}
+
+/* Table of contents default (mobile first) */
+#TableOfContents {
+    position: relative;
+    width: 100%;
+    margin-bottom: 2rem;
+    max-height: none;
+    overflow: visible;
+}
+
+
+/* Large screen layout */
+@media (min-width: 1400px) {
+    .sidenote {
+        float: left;
+        clear: left;
+        margin-left: -23vw;
+        top: -3rem;
+        width: 20vw;
+        margin-top: 1rem;
+    }
+    
+    #TableOfContents {
+        position: fixed;
+        right: 4%;
+        top: 110px;
+        width: 250px;
+        overflow-y: auto;
+        max-height: 85%;
+        margin-bottom: 0;
+    }
+
 }
