@@ -40,7 +40,7 @@ This struct composition reminded me of Russian nesting dolls, which recursively 
 
 *Storage Combinators* proposes a storage protocol that looks like this:
 
-```objective-smalltalk
+```smalltalk
 protocol Storage {
   -at:ref.
   -<void>at:ref put:object.
@@ -556,7 +556,7 @@ This just allows developers to use **Matryoshka** in a more ergonomic way, by im
 
 Now that we've got some stores and store combinators defined, we can finally try composing a store, and then updating and querying it:
 
-```iex
+```elixir
 iex> alias Matryoshka
 iex> {:ok, client} =
 ...>  Matryoshka.map_store()
