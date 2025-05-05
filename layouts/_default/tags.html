@@ -1,5 +1,6 @@
 {{ define "main" }}
 {{ $taxonomy := .Site.Taxonomies.tags }}
+{{ print $taxonomy }}
 <nav>
     <ul>
         {{ range $tag, $_ := $taxonomy }}
