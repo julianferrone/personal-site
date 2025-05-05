@@ -7,8 +7,11 @@
 </head>
 
 <body>
-    {{ block "main" . }}
-    {{ end }}
+    <div class="container">
+        <h1> {{ .Title }} </h1>
+        {{ block "main" . }}
+        {{ end }}
+    </div>
 </body>
 
 </html>

@@ -1,7 +1,6 @@
 {{ define "main" }}
 
 <body>
-    <h1>{{ .Title }}</h1>
     {{ range $tag, $pages := .Site.Taxonomies.tags }}
     <h2 id="{{ $tag | urlize }}">{{ $tag }}</h2>
     <ul>
