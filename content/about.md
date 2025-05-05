@@ -1,6 +1,6 @@
 ---
 date: '2025-05-05T17:15:08+10:00'
-draft: true
+draft: false
 title: 'About'
 url: "/about"
 layout: "index.html"
