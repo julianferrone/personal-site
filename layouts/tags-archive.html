@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{ .Title }}</title>
+</head>
+
+<body>
+    <h1>{{ .Title }}</h1>
+    {{ range $tag, $pages := .Site.Taxonomies.tags }}
+    <h2 id="{{ $tag | urlize }}">{{ $tag }}</h2>
+    <ul>
+        {{ range $pages }}
+        <li>
+            <a href="{{ .RelPermalink }}">{{ .Title }}</a> – {{ .Date.Format "2006-01-02" }}
+        </li>
+        {{ end }}
+    </ul>
+    {{ end }}
+</body>
+
+</html>
