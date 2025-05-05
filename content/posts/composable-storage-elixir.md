@@ -73,8 +73,8 @@ These four methods are equivalent to the 4 HTTP methods:
 
 The paper's barely started but I've already decided to diverge in my implementation:
 
-- I temove the `merge` method
-- and I add a `fetch` method
+- I removed the `merge` method
+- and I added a `fetch` method
 
 ### Removing merge
 
@@ -115,7 +115,7 @@ Later, we'll use a GenServer to track the changes in state.
 
 As such, we write the storage protocol:
 
-```elixir
+```elixir {linenos=inline title="/lib/matryoshka/storage.ex"}
 defprotocol Matryoshka.Storage do
   alias Matryoshka.Reference
 
@@ -129,10 +129,10 @@ defprotocol Matryoshka.Storage do
   @doc """
   Fetches the value for a specific `ref` in `store`.
 
-  If `store` contains the given `ref` then its value is returned in the shape
-  of `{:ok, value}`.
-  If `store` doesn't contain `ref`, then the reason why is returned in the shape
-  of `{:error, reason}`.
+  If `store` contains the given `ref` then its value is returned in the 
+  shape of `{:ok, value}`.
+  If `store` doesn't contain `ref`, then the reason why is returned in the 
+  shape of `{:error, reason}`.
   """
 
   def fetch(store, ref)
@@ -178,24 +178,16 @@ We'll start with the `Client` and `Server` code first, before diving into the ni
 
 ### Client
 
-The `Matryoshka.Client` module will abstract over sending messages to `Matryoshka.Server` by exposing functions to start the server:
+The `Matryoshka.Client` module will abstract over sending messages to `Matryoshka.Server` by exposing functions to start the server and send storage messages:
 
-```elixir
-# /lib/matryoshka/client.ex
+```elixir {linenos=inline title="/lib/matryoshka/client.ex"}
 defmodule Matryoshka.Client do
   @server Matryoshka.Server
 
   def start_link(store) do
     @server.start_link(store)
   end
-  ...
-```
 
-and send storage messages:
-
-```elixir
-# /lib/matryoshka/client.ex
-  ...
   def get(ref) do
     GenServer.call(@server, {:get, ref})
   end
@@ -226,8 +218,7 @@ Now it's time to handle the storage messages.
 
 The `MapStore.Server` module only needs to be a thin GenServer wrapper around the business logic in `MapStore.Impl`, so we start with `start_link/1` to and `init/1` to initialize the server:
 
-```elixir
-# /lib/matryoshka/mapstore/server.ex
+```elixir {linenos=inline title="/lib/matryoshka/mapstore/server.ex"}
 defmodule Matryoshka.Server do
   use GenServer
 
@@ -256,8 +247,7 @@ OK, so now we need to handle the different storage messages.
 
 These just call out to the business logic in the provided store, using the **Storage** protocol to dispatch the function calls:
 
-```elixir
-# /lib/matryoshka/mapstore/server.ex
+```elixir {linenos=inline linenostart=14 title="/lib/matryoshka/mapstore/server.ex"}
   ...
   @impl true
   def handle_call({:get, ref}, _from, store) do
@@ -293,9 +283,7 @@ Now it's time to write some actual business logic.
 
 First we create a **MapStore** struct in the `MapStore` module with only one key, `map`, which will contain the underlying map:
 
-```elixir
-# /lib/matryoshka/impl/map_store.ex
-
+```elixir {linenos=inline title="/lib/matryoshka/impl/map_store.ex"}
 defmodule Matryoshka.Impl.MapStore do
   @enforce_keys [:map]
   defstruct [:map]
@@ -307,8 +295,7 @@ Along with a helper function to create the **MapStore** struct from a map:
 - `map_store/0` creates a **MapStore** from a new map
 - `map_store/1` creates a **MapStore** from the provided map
 
-```elixir
-# /lib/matryoshka/impl/map_store.ex
+```elixir {linenos=inline linenostart=4 title="/lib/matryoshka/impl/map_store.ex"}
   ...
   def map_store(), do: map_store(Map.new())
   def map_store(map), do: %__MODULE__{map: map}
@@ -319,25 +306,23 @@ Then we need to define the four methods to implement the Storage protocol.
 
 `Map.fetch/2` only returns an `:error` in the case of the key not being found, but as mentioned earlier, I want to add a reason when there's a failure. I provide that in the shape `{:no_ref, ref}`, which means "No reference in the store for the provided `ref`":
 
-```elixir
-# /lib/matryoshka/impl/map_store.ex
+```elixir {linenos=inline linenostart=7 title="/lib/matryoshka/impl/map_store.ex"}
   ...
   alias __MODULE__
 
   defimpl Matryoshka.Storage do
     def fetch(store, ref) do
-	  case Map.fetch(store.map, ref) do
-		{:ok, value} -> {:ok, value}
-		:error -> {:error, {:no_ref, ref}}
-	  end
+      case Map.fetch(store.map, ref) do
+        {:ok, value} -> {:ok, value}
+        :error -> {:error, {:no_ref, ref}}
+      end
     end
     ...
 ```
 
 `get/2` is a simple call to `Map.get/2`:
 
-```elixir
-# /lib/matryoshka/impl/map_store.ex
+```elixir {linenos=inline linenostart=17 title="/lib/matryoshka/impl/map_store.ex"}
     ...
     def get(store, ref), do: Map.get(store.map, ref)
     ...
@@ -345,7 +330,7 @@ Then we need to define the four methods to implement the Storage protocol.
 
 `put/3` and `delete/2` are similarly simple calls to `Map.put/3` and `Map.delete/2`, although we need to wrap the underlying map back into a **MapStore**:
 
-```elixir
+```elixir {linenos=inline linenostart=19 title="/lib/matryoshka/impl/map_store.ex"}
 # /lib/matryoshka/impl/map_store.ex
     ...
     def put(store, ref, value) do
@@ -375,8 +360,7 @@ But we'll build it anyways just to get a feel for what a **storage combinator** 
 
 Just like with `MapStore`, we start with a struct and a helper function to construct the struct:
 
-```elixir
-# /lib/matryoshka/impl/pass_through.ex
+```elixir {linenos=inline title="/lib/matryoshka/impl/pass_through.ex"}
 defmodule Matryoshka.Impl.PassThrough do
   alias Matryoshka.Storage
   
@@ -402,8 +386,7 @@ and then implement the **Storage** protocol methods.
 
 `fetch/2` and `get/2` just call into the inner store:
 
-```elixir
-# /lib/matryoshka/impl/pass_through.ex
+```elixir {linenos=inline linenostart=19 title="/lib/matryoshka/impl/pass_through.ex"}
   ...
   alias __MODULE__
 
@@ -416,8 +399,7 @@ and then implement the **Storage** protocol methods.
 
 While `put/3` and `delete/2` call into the inner store, then re-wrap it in a `PassThrough` struct.
 
-```elixir
-# /lib/matryoshka/impl/pass_through.ex
+```elixir {linenos=inline linenostart=26 title="/lib/matryoshka/impl/pass_through.ex"}
     ...
     def put(store, ref, value) do
       new_inner = Storage.put(store.inner, ref, value)
@@ -444,8 +426,7 @@ We'll do the same.
 
 Once again we start with a struct and a helper function to create the struct:
 
-```elixir
-# /lib/matryoshka/impl/logging_store.ex
+```elixir {linenos=inline title="/lib/matryoshka/impl/logging_store.ex"}
 defmodule Matryoshka.Impl.LoggingStore do
   alias Matryoshka.Storage
   @enforce_keys [:inner]
@@ -471,8 +452,7 @@ And then we'll define the four **Storage** functions—`fetch/2`, `get/2`, `put/
 
 `fetch/2` and `get/2` will once again compute their results by just calling to the inner store using Storage. We'll then log the results using structured log messages.
 
-```elixir
-# /lib/matryoshka/impl/logging_store.ex
+```elixir {linenos=inline linenostart=19 title="/lib/matryoshka/impl/logging_store.ex"}
   ...
   alias __MODULE__
 
@@ -497,8 +477,7 @@ We implement `put/3` and `delete/2` to:
 2. Change the inner store using the function dispatch of Storage
 3. Wrap the changed inner store in a LoggingStore
 
-```elixir
-# /lib/matryoshka/impl/logging_store.ex
+```elixir {linenos=inline linenostart=34 title="/lib/matryoshka/impl/logging_store.ex"}
     ...
     def put(store, ref, value) do
       Logger.info([request: "PUT", ref: ref, value: value])
@@ -521,8 +500,7 @@ And LoggingStore is done.
 
 As a convenience, I re-export all the functionality from `Client`, `Server`, and the various implementation modules in the `Matryoshka` module via the `defdelegate` macro:
 
-```elixir
-# /lib/matryoshka.ex
+```elixir {linenos=inline title="/lib/matryoshka.ex"}
 defmodule Matryoshka do
 
   # Implementation logic
@@ -557,29 +535,29 @@ This just allows developers to use **Matryoshka** in a more ergonomic way, by im
 Now that we've got some stores and store combinators defined, we can finally try composing a store, and then updating and querying it:
 
 ```elixir
-iex> alias Matryoshka
-iex> {:ok, client} =
-...>  Matryoshka.map_store()
-...>  |> Matryoshka.logging_store()
-...>  |> Matryoshka.start_link()
-# create the composed store, then start the server
-{:ok, #PID<0.152.0>} # Note: the PID will be different every time
-iex> Matryoshka.put("key", :value)
-:ok
+alias Matryoshka
 
-10:20:30.000 [info] [request: "PUT", ref: "key", value: :value]
-iex> Matryoshka.fetch("key")
+{:ok, client} =
+  Matryoshka.map_store()
+  |> Matryoshka.logging_store()
+  |> Matryoshka.start_link()
+#=> {:ok, #PID<0.152.0>}
 
-10:20:35.000 [info] [request: "FETCH", ref: "key", value: {:ok, :value}]
-{:ok, :value}
-iex> Matryoshka.delete("key")
+Matryoshka.put("key", :value)
+#=> 10:20:30.000 [info] [request: "PUT", ref: "key", value: :value]
+#=> :ok
 
-10:20:40.000 [info] [request: "DELETE", ref: "key"]
-:ok
-iex> Matryoshka.get("key")
+Matryoshka.fetch("key")
+#=> 10:20:35.000 [info] [request: "FETCH", ref: "key", value: {:ok, :value}]
+#=> {:ok, :value}
 
-10:20:45.000 [info] [request: "GET", ref: "key", value: nil]
-nil
+Matryoshka.delete("key")
+#=> 10:20:40.000 [info] [request: "DELETE", ref: "key"]
+#=> :ok
+
+Matryoshka.get("key")
+#=> 10:20:45.000 [info] [request: "GET", ref: "key", value: nil]
+#=> nil
 ```
 
 In the next post, I'll add some more stores and store combinators to **Matryoshka** to make it more useful.
