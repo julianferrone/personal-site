@@ -9,7 +9,7 @@ tags:
 
 I recently came across the paper [*Storage Combinators*](https://dl.acm.org/doi/10.1145/3359591.3359729), which proposes an approach to designing storage systems by composing together modular components.
 
-The code in the paper is given in Objective Smalltalk, but I decided to build Matryoshka—inspired by *Storage Combinators*, but not an exact replica—in Elixir.
+The code in the paper is given in Objective Smalltalk, but I decided to build Matryoshka (inspired by *Storage Combinators*, but not an exact replica) in Elixir.
 
 In the Storage Combinators paper, the composition of different stores and store combinators is done via message passing.
 
@@ -22,7 +22,7 @@ After an early false start, I realised this approach had some issues:
 
 I ended up refactoring so that store composition was done with regular structs and functions.
 
-We first compose the business logic of a store together, before wrapping it in a Server and interacting with it via the Client module—so we only ever have 1 process per store, no matter how complex it is under the hood.
+We first compose the business logic of a store together, before wrapping it in a Server and interacting with it via the Client module, so we only ever have 1 process per store, no matter how complex it is under the hood.
 
 Regardless, the ideas around concurrency that the BEAM VM and BEAM languages (Erlang, Elixir, Gleam, Lisp Flavoured Erlang, etc.) offer are very interesting. A few examples of the design choices that come to mind:
 
@@ -76,11 +76,11 @@ The paper's barely started but I've already decided to diverge in my implementat
 
 ### Removing merge
 
-I removed `merge` as I want the storage combinators to be as generic as possible. The issue with patching-style methods is that not all types make sense to be patched—for data formats like JSON and XML, there's JSON Patch and XML Patch. But what merge operations are there for an atom or a string?
+I removed `merge` as I want the storage combinators to be as generic as possible. The issue with patching-style methods is that not all types make sense to be patched. For data formats like JSON and XML, there's JSON Patch and XML Patch. But what merge operations are there for an atom or a string?
 
 They're such small types it makes more sense to just put a new value there instead.
 
-Also, you can create the patch functionality by first getting the value, updating the value, and then putting it in—so it's arguably not even a primitive function anyways.
+Also, you can create the patch functionality by first getting the value, updating the value, and then putting it in, so it's arguably not even a primitive function anyways.
 
 However, I may end up adding an `update` function to the Storage protocol like [Map.update/4](https://hexdocs.pm/elixir/1.12/Map.html#update/4) which updates the value with a function.
 
@@ -99,7 +99,7 @@ One of the nice things about `fetch/2` is that you can distinguish between no va
 
 `get/2` on the other hand returns `nil` in both cases.
 
-I also decided to augment the return type of the errors in fetch with a reason—so the fetch in Matryoshka is intended to return either `{:ok, value}` when a value is stored at the requested key, or `{:error, reason}` if there's an error.
+I also decided to augment the return type of the errors in fetch with a reason, so the fetch in Matryoshka is intended to return either `{:ok, value}` when a value is stored at the requested key, or `{:error, reason}` if there's an error.
 
 ### Storage Protocol in Elixir
 
@@ -277,7 +277,7 @@ Now it's time to write some actual business logic.
 
 ### MapStore
 
-**MapStore** is the simplest store we can make—an in-memory, map-backed store.
+**MapStore** is the simplest store we can make; it's an in-memory, map-backed store.
 
 First we create a **MapStore** struct in the `MapStore` module with only one key, `map`, which will contain the underlying map:
 
@@ -348,7 +348,7 @@ end
 
 ### PassThrough
 
-*Storage Combinators* defines a pass-through store **PassThrough**, which is the simplest store combinator—it just passes all its requests to its source store, unchanged.
+*Storage Combinators* defines a pass-through store **PassThrough**, which is the simplest store combinator; it just passes all its requests to its source store, unchanged.
 
 In *Storage Combinators*, **PassThrough** is a useful object as other store combinators can inherit from it, reusing the functionality of passing storage requests through to other stores.
 
@@ -446,7 +446,7 @@ defmodule Matryoshka.Impl.LoggingStore do
   ...
 ```
 
-And then we'll define the four Storage functions—`fetch/2`, `get/2`, `put/3`, and `delete/2`.
+And then we'll define the four Storage functions: `fetch/2`, `get/2`, `put/3`, and `delete/2`.
 
 `fetch/2` and `get/2` will once again compute their results by just calling to the inner store using Storage. We'll then log the results using structured log messages.
 
