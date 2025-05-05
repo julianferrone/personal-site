@@ -67,7 +67,6 @@ body {
     color: var(--black)
 }
 
-
 /***********************************************************
 ********************** Post Summaries **********************
 ***********************************************************/
@@ -98,6 +97,7 @@ body {
 .post-title a {
     color: var(--black);
     font-size: 1.2rem;
+    text-decoration: dashed underline;
 }
 
 .post-title a:hover {
@@ -110,7 +110,7 @@ body {
 
 .post-tags a {
     font-size: 0.9em;
-    text-decoration: none;
+    text-decoration: dotted underline;
     color: var(--grey)
 }
 
@@ -172,3 +172,16 @@ td>code {
     padding-right: .1rem;
     border-radius: .2rem;
 }
+
+/***********************************************************
+*************************** Links **************************
+***********************************************************/
+
+a {
+    color: var(--grey);
+}
+
+a:hover {
+    color: var(--red);
+}
+
