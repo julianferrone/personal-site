@@ -146,8 +146,15 @@ th {
 ************************ Code Blocks ***********************
 ***********************************************************/
 
+p.filename {
+    font-family: "Berkeley Mono", monospace;
+    color: var(--grey);
+    margin: 0;
+}
+
 pre {
     padding: 1rem;
+    background-color: var(--white);
 }
 
 code {
