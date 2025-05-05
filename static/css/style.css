@@ -2,11 +2,27 @@
 ************************** Website *************************
 ***********************************************************/
 
+/**************
+********* Colours
+**************/
+
+:root {
+    --stone: #f6f5f5;
+    --grey: #746d66;
+    --black: #1F1E1C;
+    --red: #CA0020;
+}
+
+/**************
+********* Elements
+**************/
+
 body {
     margin: 0;
     padding: 0;
     font-family: sans-serif;
     line-height: 1.6;
+    background-color: var(--stone);
 }
 
 /* This wraps your whole page content */
@@ -15,6 +31,40 @@ body {
     margin: 0 auto;
     padding: 1rem;
 }
+
+/***********************************************************
+********************** Navigation Bar **********************
+***********************************************************/
+
+.navbar {
+    background-color: var(--black);
+}
+
+.navbar ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.navbar li {
+    display: block;
+}
+
+.navbar a {
+    display: block;             /* Makes the entire area clickable */
+    padding: 0.5rem 1rem;       /* Adds space around the link */
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.navbar a:hover {
+    background-color: var(--stone);     /* Change entire box color on hover */
+    color: var(--black)
+}
+
 
 /***********************************************************
 ********************** Post Summaries **********************
@@ -26,18 +76,44 @@ body {
     gap: 1rem;
 }
 
+
 .post-row {
     display: grid;
-    grid-template-columns: 120px 1fr 1fr;
+    grid-template-columns: 120px 1fr max-content;
     gap: 1rem;
     align-items: center;
 }
 
+.post-date {
+    font-family: 'Berkeley Mono', Courier, monospace;
+    font-size: 1.2rem;
+}
+
+/**************
+********* Post Title
+**************/
+
+.post-title a {
+    color: var(--black);
+    font-size: 1.2rem;
+}
+
+.post-title a:hover {
+    color: var(--red);
+}
+
+/**************
+********* Post Tags
+**************/
+
 .post-tags a {
-    margin-right: 0.5rem;
     font-size: 0.9em;
     text-decoration: none;
-    color: #555;
+    color: var(--grey)
+}
+
+.post-tags a:hover {
+    color: var(--black)
 }
 
 /***********************************************************
