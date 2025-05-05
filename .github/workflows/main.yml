@@ -15,5 +15,5 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           key: ${{ secrets.PRIVATE_KEY }}
-          source: "public/*"
+          source: "./public/*"
           target: "/var/www/julianferrone.com"
