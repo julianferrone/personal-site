@@ -22,6 +22,7 @@
 body {
     margin: 0;
     padding: 0;
+    padding-top: 60px;
     font-family: sans-serif;
     line-height: 1.6;
     background-color: var(--stone);
@@ -39,6 +40,9 @@ body {
 ***********************************************************/
 
 .navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
     display: flex;
     justify-content: space-between;
     background-color: var(--black);
@@ -229,7 +233,7 @@ a:hover {
     #TableOfContents {
         position: fixed;
         right: 4%;
-        top: 110px;
+        top: 150px;
         width: 250px;
         overflow-y: auto;
         max-height: 85%;
