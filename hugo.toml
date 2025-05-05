@@ -1,3 +1,11 @@
-baseURL = 'https://example.org/'
+baseURL = 'https://julianferrone.com'
 languageCode = 'en-us'
-title = 'My New Hugo Site'
+title = 'Julian Ferrone'
+
+[taxonomies]
+tag = "tags"
+
+[outputs]
+home = ["HTML"]
+section = ["HTML"]
+taxonomy = []      # disables /tags/foo/ etc.
