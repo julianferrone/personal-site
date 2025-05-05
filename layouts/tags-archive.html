@@ -1,13 +1,21 @@
 {{ define "main" }}
-
-<body>
-    {{ range $tag, $pages := .Site.Taxonomies.tags }}
-    <h2 id="{{ $tag | urlize }}">{{ $tag }}</h2>
-    <div>
-        {{ range $pages }}
-            {{.Render "post_row" }}
+{{ $taxonomy := .Site.Taxonomies.tags }}
+<nav id="TableOfContents">
+    <ul>
+        {{ range $tag, $_ := $taxonomy }}
+        {{ $href := add "/tags#" $tag }}
+        <li>
+            <a href="{{ $href }}">{{ $tag }}</a>
+        </li>
         {{ end }}
-    </div>
+    </ul>
+</nav>
+{{ range $tag, $pages := $taxonomy }}
+<h2 id="{{ $tag | urlize }}">{{ $tag }}</h2>
+<div>
+    {{ range $pages }}
+    {{.Render "post_row" }}
     {{ end }}
-</body>
+</div>
+{{ end }}
 {{ end }}
