@@ -1,0 +1,10 @@
+{{ define "main" }}
+{{ .Content }}
+<h2>Recent Posts</h2>
+{{ $posts := first 5 (where .Site.RegularPages "Section" "posts") }}
+<div>
+    {{ range $posts }}
+    {{ .Render "post_row"}}
+    {{ end }}
+</div>
+{{ end }}
