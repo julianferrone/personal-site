@@ -170,6 +170,26 @@ code {
     font-family: "Berkeley Mono", monospace;
 }
 
+pre,
+code {
+    white-space: pre-wrap;
+    /* allow wrapping */
+    word-break: break-word;
+    /* break long words */
+    overflow-wrap: anywhere;
+    /* fallback for older browsers */
+    tab-size: 4;
+    /* preserve tab width */
+    -moz-tab-size: 4;
+    /* Firefox support */
+}
+
+pre code span {
+    white-space: pre-wrap;
+}
+
+
+
 p>code,
 li>code,
 dd>code,
@@ -181,6 +201,7 @@ td>code {
     padding-right: .1rem;
     border-radius: .2rem;
 }
+
 
 /***********************************************************
 *************************** Links **************************
@@ -229,7 +250,7 @@ a:hover {
         width: 20vw;
         margin-top: 1rem;
     }
-    
+
     #TableOfContents {
         position: fixed;
         right: 4%;
