@@ -1,5 +1,13 @@
 name: Publish blog
-on: [push]
+on:
+  push:
+    branches:
+      - 'main'
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    # 3:30 pm UTC is 1:30 am Sydney time
+    # This allows me to schedule posts
+    - cron:  '30 15 * * *'
 jobs:
   build:
     runs-on: ubuntu-latest
