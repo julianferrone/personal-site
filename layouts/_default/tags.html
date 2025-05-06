@@ -1,22 +1,23 @@
 {{ define "main" }}
-{{ $taxonomy := .Site.Taxonomies.tags }}
-{{ print $taxonomy }}
-<nav>
-    <ul>
-        {{ range $tag, $_ := $taxonomy }}
-        {{ $href := add "/tags#" $tag }}
-        <li>
-            <a href="{{ $href }}">{{ $tag }}</a>
-        </li>
+<div layout="layout/_default/tags.html">
+    {{ $taxonomy := .Site.Taxonomies.tags }}
+    <nav>
+        <ul>
+            {{ range $tag, $_ := $taxonomy }}
+            {{ $href := add "/tags#" $tag }}
+            <li>
+                <a href="{{ $href }}">{{ $tag }}</a>
+            </li>
+            {{ end }}
+        </ul>
+    </nav>
+    {{ range $tag, $pages := $taxonomy }}
+    <h2 id="{{ $tag | urlize }}">{{ $tag }}</h2>
+    <div class="posts">
+        {{ range $pages }}
+        {{.Render "post_row" }}
         {{ end }}
-    </ul>
-</nav>
-{{ range $tag, $pages := $taxonomy }}
-<h2 id="{{ $tag | urlize }}">{{ $tag }}</h2>
-<div>
-    {{ range $pages }}
-    {{.Render "post_row" }}
+    </div>
     {{ end }}
 </div>
-{{ end }}
 {{ end }}
