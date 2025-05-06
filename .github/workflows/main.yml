@@ -22,4 +22,4 @@ jobs:
           user: ${{ secrets.USER }}
           host: ${{ secrets.HOST }}
         run: |
-          scp -i "$HOME/.ssh/id_rsa" -r public/* "$user@$host:/var/www/julianferrone.com"
+          rsync --delete --archive public/ "${user}@${host}:/var/www/julianferrone.com/"
