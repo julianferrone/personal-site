@@ -191,13 +191,13 @@ defprotocol Matryoshka.Storage do
   If `store` contains the given `ref` then its value `value` is returned.
   If `store` doesn't contain `ref`, `nil` is returned.
   """
-  @spec get(store(), Reference.impl_reference()) :: value()
+  @spec get(store(), Reference.t()) :: value()
   def get(store, ref)
 
   @doc """
   Puts the given `value` under `ref` in `store`.
   """
-  @spec put(store(), Reference.impl_reference(), value()) :: store()
+  @spec put(store(), Reference.t(), value()) :: store()
   def put(store, ref, value)
 
   @doc """
@@ -205,9 +205,21 @@ defprotocol Matryoshka.Storage do
 
   If the `ref` does not exist, returns `store` unchanged.
   """
-  @spec delete(store(), Reference.impl_reference()) :: store()
+  @spec delete(store(), Reference.t()) :: store()
   def delete(store, ref)
 end
+```
+
+I've also created a small module used for typespecs where I expect a struct implementing Storage:
+
+```elixir {linenos=inline title="/lib/matryoshka/is_storage.ex"}
+defmodule Matryoshka.IsStorage do
+  @typedoc """
+  A struct that implements the Matryoshka.Storage protocol.
+  """
+  @type t :: any()
+end
+
 ```
 
 And now we're ready to start putting together implementations for Storage.
@@ -568,10 +580,8 @@ defmodule Matryoshka do
 
   # Business logic
   defdelegate logging_store(store), to: LoggingStore
-
   defdelegate map_store(), to: MapStore
   defdelegate map_store(map), to: MapStore
-
   defdelegate pass_through(store), to: PassThrough
 end
 ```
