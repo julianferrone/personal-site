@@ -28,7 +28,7 @@
     --clr-surface-a50: #b2b2b2;
 }
 
-[data-theme="dark"] {
+:root[data-theme="dark"] {
     /** Base colors */
     --clr-dark-a0: #cecdcb;
     --clr-light-a0: #1F1E1C;
