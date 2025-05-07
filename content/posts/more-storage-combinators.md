@@ -1,11 +1,11 @@
 ---
 date: '2025-05-05T19:43:01+10:00'
-draft: true
+draft: false
 title: 'Matryoshka 2: More Storage Combinators'
 tags:
 - elixir
 - programming
-publishDate: 2025-05-20
+publishDate: 2025-05-19
 ---
 
 Let's add some more stores and store combinators to Matryoshka, my composable storage library in Elixir.
