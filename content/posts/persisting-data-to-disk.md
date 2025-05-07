@@ -139,7 +139,19 @@ The final entry will be the data:
 - Write entries will include the key and the value
 - Delete entries will include only the key
 
-IMAGES
+```goat
++------------+-------------+------------+------------+-------+-------------+
+| Timestamp  | WRITE       | Key Size   | Value Size | Key   | Value       |
++------------+-------------+------------+------------+-------+-------------+
+| 64 bit int | 4 byte atom | 16 bit int | 32 bit int | Binary encoded term |
++------------+-------------+------------+------------+---------------------+
+
++------------+-------------+------------+---------------------+              
+| Timestamp  | DELETE      | Key Size   | Key                 |              
++------------+-------------+------------+---------------------+
+| 64 bit int | 4 byte atom | 16 bit int | Binary encoded term |
++------------+-------------+------------+---------------------+               
+```
 
 We'll store timestamps in a 64-bit unsigned int, which is large enough to hold a millisecond-precision Unix timestamp:
 
