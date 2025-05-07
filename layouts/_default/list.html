@@ -1,6 +1,6 @@
 {{ define "main" }}
 <div class="posts">
-    {{ range .Pages }}
+    {{ range sort .Pages "PublishDate" "desc" }}
         {{.Render "post_row" }}
     {{ end }}
 </div>

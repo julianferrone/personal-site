@@ -14,7 +14,7 @@
     {{ range $tag, $pages := $taxonomy }}
     <h2 id="{{ $tag | urlize }}">{{ $tag }}</h2>
     <div class="posts">
-        {{ range $pages }}
+        {{ range sort $pages "PublishDate" "desc" }}
         {{.Render "post_row" }}
         {{ end }}
     </div>
