@@ -287,6 +287,75 @@ end
 
 ### BackupStore
 
+With SwitchingStore, we've broken the ground on store combinators that compose an arbitrarily large number of stores. Let's continue with a BackupStore, which will retrieve values only from a main store, but store values in both the main store and a list of target stores.
+
+Once again we start with a struct and a helper function to construct the struct:
+
+```elixir {linenos=inline title="/lib/matryoshka/impl/backup_store.ex"}
+defmodule Matryoshka.Impl.BackupStore do
+  alias Matryoshka.IsStorage
+  alias Matryoshka.Storage
+
+  @enforce_keys [:source_store, :target_stores]
+  defstruct @enforce_keys
+
+  @type t :: %__MODULE__{
+          source_store: IsStorage.t(),
+          target_stores: list(IsStorage.t())
+        }
+
+  def backup_store(source_store, target_stores)
+      when is_struct(source_store) and is_list(target_stores) do
+    %__MODULE__{
+      source_store: source_store,
+      target_stores: target_stores
+    }
+  end
+  ...
+```
+
+Now let's define the Storage functionality. `fetch/2` and `get/2` just delegate their calls to the inner source store:
+
+```elixir {linenos=inline linenostart=20 title="/lib/matryoshka/impl/backup_store.ex"}
+  ...
+  alias __MODULE__
+
+  defimpl Storage do
+    def fetch(store, ref) do
+      Storage.fetch(store.source_store, ref)
+    end
+
+    def get(store, ref) do
+      Storage.get(store.source_store, ref)
+    end
+    ...
+```
+
+While `put/3` and `delete/2` map over the source and target stores, then wrap up the updated stores into the BackupStore struct:
+
+```elixir {linenos=inline linenostart=31 title="/lib/matryoshka/impl/backup_store.ex"}
+    ...
+    def put(store, ref, value) do
+      source_store = Storage.put(store.source_store, ref, value)
+      target_stores = Enum.map(
+        store.target_stores,
+        fn store -> Storage.put(store, ref, value) end
+      )
+      BackupStore.backup_store(source_store, target_stores)
+    end
+
+    def delete(store, ref) do
+      source_store = Storage.delete(store.source_store, ref)
+      target_stores = Enum.map(
+        store.target_stores,
+        fn store -> Storage.delete(store, ref) end
+      )
+      BackupStore.backup_store(source_store, target_stores)
+    end
+  end
+end
+```
+
 ### CachingStore
 
 Ah, but we run into an issue with CachingStore.
