@@ -784,8 +784,21 @@ And with that, we have finally finished writing the append-only-log-backed store
 
 ### Packaging into PersistentStore
 
-PersistentStore as example of pre-composed store
+We'll cap off this post with an example of a new store we construct with LogStore: a persistent store that uses LogStore as a disk-based source of truth, with caching functionality backed by an in-memory MapStore.
 
+```elixir {linenos=inline title="/lib/matryoshka/impl/persistent_store.ex"}
+defmodule Matryoshka.Impl.PersistentStore do
+  alias Matryoshka.Impl.CachingStore
+  alias Matryoshka.Impl.LogStore
+
+  def persistent_store(log_filepath) do
+    LogStore.log_store(log_filepath)
+    |> CachingStore.caching_store()
+  end
+end
+```
+
+It's as easy as that. Whenever we want to compose stores and store combinators together, we can just pass them into each-other using good old fashioned function calls and the Elixir pipeline operator.
 
 ## Exposing to Matryoshka consumers 
 
