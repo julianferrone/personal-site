@@ -104,6 +104,10 @@ We'll build LogStore with these limitations in mind.
 
 *Firstly, I'd like to note that the code in this implementation is heavily inspired by the approach in [Build a Simple Persistent Key-Value Store in Elixir, using Logs – Part 2](https://www.poeticoding.com/build-a-simple-persistent-key-value-store-in-elixir-using-logs-part-2/). I've made some changes to deal with arbitrary keys and values, along with deleting values, but this article helped me immensely in understanding how append-only log-backed key-values stores work, along with giving me ideas on how to structure my log entries.*
 
+The secret sauce to LogStore is `:erlang.term_to_binary/1` and `:erlang.binary_to_term/1`, which encode and decode Erlang (and Elixir) terms to and from binary. This is going to let us serialize any kinds of references and values we want to the log file, which fixes the first issue with FilesystemStore (only being able to read and write with string references and string values).
+
+Whenever we make an update (put or delete) to LogStore, we'll append a log entry, in binary encoding, to the log file. We'll store the position and size of the value in an index map, which will allow us to read exactly `size` bytes from the file every time we want to retrieve (get or fetch) a value. All the 
+
 LogStore is a lot more complicated than all the other stores we've written, so I've elected to break it up into four modules:
 
 | Module | Explanation |
@@ -115,9 +119,114 @@ LogStore is a lot more complicated than all the other stores we've written, so I
 
 ### Encoding
 
+The Encoding module is mainly for bookkeeping.
+
+Before we get into the code, let's work out how we're going to format our log entries. We'll have two kinds of log entries: writes, and deletes.
+
+Both kinds of log entries will start with a timestamp. The next part of our entry is going to be a one-letter atom which represents whether the rest of the log entry is a write entry (`:w`) or a delete entry (`:d`).
+
+The next entry will need to be a size indicator. If the log entry is a write, we'll need to store both the size of the key and the size of the value. If the log entry is a delete, we'll only need to store the size of the key.
+
+The final entry will be the data:
+
+- Write entries will include the key and the value
+- Delete entries will include only the key
+
+IMAGES
+
+We'll store timestamps in a 64-bit unsigned int, which is large enough to hold a millisecond-precision Unix timestamp:
+
+```elixir {linenos=inline title="/lib/matryoshka/impl/log_store/encoding.ex"}
+defmodule Matryoshka.Impl.LogStore.Encoding do
+  @timestamp_bitsize 64
+  def timestamp_bitsize, do: @timestamp_bitsize
+  
+  @time_unit :millisecond
+  def time_unit, do: @time_unit
+  ...
+```
+
+We also provide functions in Encoding so that the Deserialize and Serialize modules can access the module attributes that we're defining.
+
+We'll define the maximum key and value lengths to be 2^16 bits (~66 kB) and 2^32 bits (~4.3 GB) respectively, so we'll store the key and value lengths in a 16-bit unsigned int and a 32-bit unsigned int.
+
+```elixir {linenos=inline linenostart=7 title="/lib/matryoshka/impl/log_store/encoding.ex"}
+  ...
+  @key_bitsize 16
+  def key_bitsize, do: @key_bitsize
+
+  @value_bitsize 32
+  def value_bitsize, do: @value_bitsize
+  ...
+```
+
+Since we're using single-letter atoms to represent write vs. delete entries in the log file, we need 4 bytes to store them (single-letter atoms have a length of 4 after converting them to binary with :erlang.term_to_binary/1):
+
+
+```elixir {linenos=inline linenostart=13 title="/lib/matryoshka/impl/log_store/encoding.ex"}
+  ...
+  @atom_bytesize 4
+  def atom_bytesize, do: @atom_bytesize
+
+  @atom_write :w
+  def atom_write, do: @atom_write
+  def atom_write_binary, do: :erlang.term_to_binary(@atom_write)
+
+  @atom_delete :d
+  def atom_delete, do: @atom_delete
+  def atom_delete_binary, do: :erlang.term_to_binary(@atom_delete)
+  ...
+```
+
+We also need a helper function to calculate how many bits are in a byte, which will be useful for calculating entry sizes:
+
+```elixir {linenos=inline linenostart=24 title="/lib/matryoshka/impl/log_store/encoding.ex"}
+  ...
+  def bits_to_bytes(bits), do: div(bits, 8)
+  ...
+```
+
+
+
+```elixir {linenos=inline linenostart=26 title="/lib/matryoshka/impl/log_store/encoding.ex"}
+  def delete_entry_size(key_size) do
+    Enum.sum([
+      bits_to_bytes(@timestamp_bitsize),
+      atom_bytesize(),
+      bits_to_bytes(@key_bitsize),
+      key_size
+    ])
+  end
+
+  def write_entry_size(key_size, value_size) do
+    Enum.sum([
+      bits_to_bytes(@timestamp_bitsize),
+      atom_bytesize(),
+      bits_to_bytes(@key_bitsize),
+      bits_to_bytes(@value_bitsize),
+      key_size,
+      value_size
+    ])
+  end
+
+  def write_entry_pre_value_size(key_size) do
+    Enum.sum([
+      bits_to_bytes(@timestamp_bitsize),
+      atom_bytesize(),
+      bits_to_bytes(@key_bitsize),
+      bits_to_bytes(@value_bitsize),
+      key_size
+    ])
+  end
+end
+
+```
+
 ### Serialize
 
 ### Deserialize
+
+### Wrapping into LogStore
 
 ### Packaging into PersistentStore
 
