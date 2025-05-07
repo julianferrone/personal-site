@@ -186,9 +186,16 @@ We also need a helper function to calculate how many bits are in a byte, which w
   ...
 ```
 
+We want to minimise how much data the LogStore has to read from disk whenever we retrieve a value. To do so, we'll be storing an in-memory index, which maps references to a combination of file position (where the value starts in the file) and the value size. Whenever we want to retrieve the value for a reference, we'll go to the file position for that reference, then read the number of bytes the index tells us.
 
+As such, whenever we're appending entries to the log file, or reading the log file on a cold start, it'll be very useful to calculate the sizes of:
+
+- The delete entry
+- The write entry
+- The size of the write entry excluding the value size
 
 ```elixir {linenos=inline linenostart=26 title="/lib/matryoshka/impl/log_store/encoding.ex"}
+  ...
   def delete_entry_size(key_size) do
     Enum.sum([
       bits_to_bytes(@timestamp_bitsize),
@@ -219,7 +226,6 @@ We also need a helper function to calculate how many bits are in a byte, which w
     ])
   end
 end
-
 ```
 
 ### Serialize
