@@ -244,7 +244,7 @@ p>code,
 li>code,
 dd>code,
 td>code {
-    background-color: var(--secondary-color);
+    background-color: var(--clr-surface-a20);
     word-wrap: break-word;
     box-decoration-break: clone;
     padding-left: .1rem;
@@ -276,7 +276,7 @@ blockquote {
 
 .other-posts-in-series {
     padding: 1em;
-    background-color: var(--primary-color);
+    background-color: var(--clr-surface-a10);
 }
 
 /***********************************************************
