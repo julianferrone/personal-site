@@ -3,15 +3,17 @@
     {{ .TableOfContents }}
     {{ $series := .Params.Series }}
     {{ if $series }}
+    {{ $series_posts := sort (index .Site.Taxonomies.series $series) "PublishDate" "asc"}}
+    {{ if gt ($series_posts | len) 1}}
     <div class="other-posts-in-series">  
         <strong>Posts in the Series</strong>  
-        {{ $series_posts := sort (index .Site.Taxonomies.series $series) "PublishDate" "asc"}}
         <div>
             {{ range $series_posts }}
             {{ .Render "series_row" }}
             {{ end }}
         </div> 
     </div>
+    {{ end }}
     {{ end }}
     {{ .Content }}
 </div>
