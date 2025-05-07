@@ -5,6 +5,7 @@ title: 'Matryoshka 1: Composable Storage in Elixir'
 tags:
 - elixir
 - programming
+publishDate: '2025-05-05'
 ---
 
 I recently came across the paper [*Storage Combinators*](https://dl.acm.org/doi/10.1145/3359591.3359729), which proposes an approach to designing storage systems by composing together modular components.
