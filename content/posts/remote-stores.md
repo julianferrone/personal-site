@@ -4,7 +4,7 @@ draft: true
 title: 'Matryoshka 4: Remote Stores'
 tags:
 - programming
-publishDate: '2025-06-07'
+publishDate: '2025-06-30'
 ---
 
 - FtpClient store using erlang :ftp. Can create under Matryoshka (no dependencies)

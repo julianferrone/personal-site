@@ -5,7 +5,7 @@ title: 'Matryoshka 5: Updating Values'
 tags:
 - elixir
 - programming
-publishDate: '2025-06-15'
+publishDate: '2025-07-14'
 ---
 
 Adding update(store, ref, function, default) to Storage protocol and updating all stores
