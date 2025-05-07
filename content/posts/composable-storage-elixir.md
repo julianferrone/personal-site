@@ -34,9 +34,58 @@ OK, so why the name "Matryoshka"?
 
 I eventually elected to engineer this composition functionality by wrapping stores with store combinators (more on this later). This struct composition reminded me of Russian nesting dolls, which recursively store ever smaller Russian nesting dolls inside themselves.
 
-## The storage protocol
+## The protocols
 
-*Storage Combinators* proposes a storage protocol that looks like this:
+*Storage Combinators* defines two protocols: one is a reference protocol, which identifies the location of a resource, while the second is a storage protocol, which models the insertion, deletion, and retrieval of resources.
+
+### The reference protocol
+
+The reference protocol looks like this:
+
+```smalltalk
+protocol Reference {
+  -<Array>pathComponents.
+  -<String>path.
+  -<String>scheme.
+}
+```
+
+References are supposed to have a path and a scheme, which can (for convenience) be accessed as a list of path components.
+
+I've elected to simplify the Reference protocol in Elixir by removing the scheme attribute, and enforcing that the only required method is `path_segments/1`; the full `path` is just the type itself. In cases where we would use a scheme in a URI, we can simply use the first path segment, which simplifies things for our implementation.
+
+```elixir {linenos=inline title="/lib/matryoshka/reference.ex"}
+defprotocol Matryoshka.Reference do
+  @typedoc """
+  A type that implements the Matryoshka.Reference protocol.
+  """
+  @type t() :: any
+
+  @doc """
+  Splits a Reference into the list of underlying path components.
+  """
+  @spec path_segments(t()) :: list(String.t())
+  def path_segments(reference)
+end
+
+defimpl Matryoshka.Reference, for: BitString do
+  def path_segments(reference) do
+    String.split(reference, "/")
+  end
+end
+
+defimpl Matryoshka.Reference, for: Atom do
+  def path_segments(reference) do
+    [Atom.to_string(reference)]
+  end
+end
+```
+
+In Matryoshka we'll predominantly be using strings as the references. I expect paths to be strings like `"/first/second/key"`, so to create the list of path segments, we simply splitthe string using forward slashes as a delimiter. I've also added an implementation for atoms to show that we could use any other types as references.
+
+### The storage protocol
+
+The storage protocol is defined as:
 
 ```smalltalk
 protocol Storage {
