@@ -2,7 +2,7 @@
 <div layout="layouts/_default/home.html">
     {{ .Content }}
     <h2>Recent Posts</h2>
-    {{ $posts := first 5 (where .Site.RegularPages "Section" "posts") }}
+    {{ $posts := first 5 (sort (where .Site.RegularPages "Section" "posts") "PublishDate" "desc") }}
     <div class="posts">
         {{ range $posts }}
         {{ .Render "post_row"}}
