@@ -13,4 +13,4 @@ taxonomy = []      # disables /tags/foo/ etc.
 
 [markup]
   [markup.highlight]
-    style = 'trac'
+    noclasses = false

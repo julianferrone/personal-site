@@ -3,7 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
+    <script src="/js/theme_switch.js"></script>
     <link rel="stylesheet" href="/css/style.css">
+    <link id="light-syntax" rel="stylesheet" href="/css/syntax-light.css" disabled>
+    <link id="dark-syntax" rel="stylesheet" href="/css/syntax-dark.css" disabled>
     <link rel="manifest" href="/site.webmanifest">
     <link rel="icon" href="/favicon.ico" sizes="32x32">
     <title>Julian Ferrone - {{ .Title }}</title>
@@ -20,6 +23,9 @@
             <a href="/posts/">Posts</a>
             <a href="/tags/">Tags</a>
             <a href="/about">About</a>
+            <button id="theme-switch">
+                <img src="/white_sun.svg" alt="">
+            </button>
         </div>
     </nav>
     <div class="container">
