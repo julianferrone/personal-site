@@ -53,7 +53,7 @@ Since the provided refs are going to be considered as paths relative to the root
   ...
 ```
 
-Then we can implement the Storage methods by reading from and writing to files:
+Then we can implement the Storage methods by reading from files:
 
 ```elixir {linenos=inline linenostart=22 title="/lib/matryoshka/impl/filesystem_store.ex"}
   alias __MODULE__
@@ -78,7 +78,13 @@ Then we can implement the Storage methods by reading from and writing to files:
         {:error, _reason} -> {store, nil}
       end
     end
+    ...
+```
 
+...and writing to files:
+
+```elixir {linenos=inline linenostart=44 title="/lib/matryoshka/impl/filesystem_store.ex"}
+    ...
     def put(store, ref, value) when is_binary(value) do
       path = FilesystemStore.absolute_path(store, ref)
       parent_dir = Path.dirname(path)
