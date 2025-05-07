@@ -230,9 +230,436 @@ end
 
 ### Serialize
 
+Now that we've defined our log entry formats, let's work on serializing them to disk. We'll start with a function to retrieve the system time, then serialize it to binary:
+
+```elixir {linenos=inline title="/lib/matryoshka/impl/log_store/serialize.ex"}
+defmodule Matryoshka.Impl.LogStore.Serialize do
+  alias Matryoshka.Impl.LogStore.Encoding
+  import :erlang, only: [term_to_binary: 1]
+
+  # ------------------------ Timestamp -----------------------
+
+  def binary_timestamp() do
+    timestamp = System.system_time(Encoding.time_unit())
+    <<timestamp::big-unsigned-integer-size(Encoding.timestamp_bitsize())>>
+  end
+  ...
+```
+
+Then we'd also like functions for formatting the log entries in binary. These functions will return a tuple in the shape `{entry, entry_size, value_size}` where:
+
+- The entry will be written to disk
+- The size of the entry in bytes will be used when calculating our offsets
+- The size of the value in bytes will be stored in the index so we know how many bytes to read on retrieving the value from the log file
+
+```elixir {linenos=inline linenostart=11 title="/lib/matryoshka/impl/log_store/serialize.ex"}
+  ...
+  # ----------------------- Formatting -----------------------
+
+  def format_write_log_entry(key, value) do
+    {key_size, key_size_data, key} = pack_key(key)
+    {value_size, value_size_data, value} = pack_value(value)
+
+    entry =
+      Enum.join([
+        Encoding.atom_write_binary(),
+        key_size_data,
+        value_size_data,
+        key,
+        value
+      ])
+
+    entry_size = Encoding.write_entry_pre_value_size(key_size)
+
+    {prepend_timestamp(entry), entry_size, value_size}
+  end
+
+  def format_delete_log_entry(key) do
+    {key_size, key_size_data, key} = pack_key(key)
+
+    entry =
+      Enum.join([
+        Encoding.atom_delete_binary(),
+        key_size_data,
+        key
+      ])
+
+    entry_size = Encoding.delete_entry_size(key_size)
+
+    {prepend_timestamp(entry), entry_size, nil}
+  end
+  ...
+```
+
+These entry formatting functions will need some helper functions. We want to prepend the timestamp to all log entries, which will be done with `prepend_timestamp/1`:
+
+```elixir {linenos=inline linenostart=46 title="/lib/matryoshka/impl/log_store/serialize.ex"}
+  ...
+  def prepend_timestamp(data) when is_binary(data) do
+    timestamp = binary_timestamp()
+    timestamp <> data
+  end
+  ...
+```
+
+We also want some helper functions to pack keys and values into an unsigned int, with a size of a given bit width (16 bits for keys, 32 bits for values):
+
+- `size` is the byte size of the binary-encoded term.
+- `size_data` is the binary-encoded size using `int_size` bits.
+- `binary_term` is the binary representation of the term.
+
+```elixir {linenos=inline linenostart=51 title="/lib/matryoshka/impl/log_store/serialize.ex"}
+  ...
+  def pack_term(term, int_size) do
+    binary = term |> term_to_binary()
+    size = byte_size(binary)
+    size_data = <<size::big-unsigned-integer-size(int_size)>>
+    {size, size_data, binary}
+  end
+
+  def pack_key(key), do: pack_term(key, Encoding.key_bitsize())
+
+  def pack_value(value), do: pack_term(value, Encoding.value_bitsize())
+  ...
+```
+
+Now that we can format log entries, we just need to append entries to the log file:
+
+```elixir {linenos=inline linenostart=62 title="/lib/matryoshka/impl/log_store/serialize.ex"}
+  ...
+  # ------------------- Writing to Log File ------------------
+
+  def append_write_log_entry(fd, key, value) do
+    {entry, relative_offset, value_size} = format_write_log_entry(key, value)
+    IO.binwrite(fd, entry)
+    {relative_offset, value_size}
+  end
+
+  def append_delete_log_entry(fd, key) do
+    {entry, relative_offset, value_size} = format_delete_log_entry(key)
+    IO.binwrite(fd, entry)
+    {relative_offset, value_size}
+  end
+end
+```
+
+We've finished defining how to write log entries, now it's time to define how to read them.
+
 ### Deserialize
 
-### Wrapping into LogStore
+We'll start with some helper functions with IO:
+
+- `handle_io_result/2` applies a function to the result of IO.binread only if there's no error
+- `binread_then_map/3` reads a set number of bytes from a file, then applies the function using `handle_io_result/2`. This is useful for reading bits of data at a time that we can then parse.
+
+```elixir {linenos=inline title="/lib/matryoshka/impl/log_store/deserialize.ex"}
+defmodule Matryoshka.Impl.LogStore.Deserialize do
+  alias Matryoshka.Impl.LogStore.Encoding
+  import :erlang, only: [binary_to_term: 1]
+
+  # __________________ Reading from Log File _________________
+
+  # ----------------------- IO Helpers -----------------------
+
+  def handle_io_result(:eof, _fun), do: :eof
+  def handle_io_result({:error, reason}, _fun), do: {:error, reason}
+  def handle_io_result(bytes, fun), do: {:ok, fun.(bytes)}
+
+  def binread_then_map(fd, number_bytes, fun) do
+    bytes = IO.binread(fd, number_bytes)
+    handle_io_result(bytes, fun)
+  end
+  ...
+```
+
+Next, we'll add some functions to read and parse data from the file. These parse the binary into integers, atoms, or timestamps:
+
+```elixir {linenos=inline linenostart=17 title="/lib/matryoshka/impl/log_store/deserialize.ex"}
+  ...
+  # ------------------ Reading Elixir Types ------------------
+
+  def read_big_unsigned_integer(fd, int_size) do
+    number_bytes = Encoding.bits_to_bytes(int_size)
+
+    binread_then_map(fd, number_bytes, fn bytes ->
+      <<int::big-unsigned-integer-size(int_size)>> = bytes
+      int
+    end)
+  end
+
+  def read_atom(fd) do
+    atom_bytesize = Encoding.atom_bytesize()
+
+    binread_then_map(
+      fd,
+      atom_bytesize,
+      fn bytes ->
+        <<binary_atom::binary-size(atom_bytesize)>> = bytes
+        atom = binary_to_term(binary_atom)
+        atom
+      end
+    )
+  end
+
+  def read_timestamp(fd) do
+    timestamp_bitsize = Encoding.timestamp_bitsize()
+
+    with {:ok, timestamp_int} <- read_big_unsigned_integer(fd, timestamp_bitsize) do
+      DateTime.from_unix(timestamp_int, Encoding.time_unit())
+    else
+      other -> other
+    end
+  end
+  ...
+```
+
+But the most important part is reading the log entries. When we read a log entry, we consume the timestamp (which currently, we do nothing with) and the entry kind atom, which lets us split the rest of the entry reading to either `read_write_entry/1` (if the atom is `:w`) or `read_delete_entry/1` (if the atom is `:d`). If there's a different atom encoded, we'll return an error value.
+
+```elixir {linenos=inline linenostart=52 title="/lib/matryoshka/impl/log_store/deserialize.ex"}
+  ...
+  # ------------------- Reading Log Entries ------------------
+
+  # .................... Read Entire Entry ....................
+
+  def read_log_entry(fd) do
+    _timestamp = read_timestamp(fd)
+    entry_kind = read_atom(fd)
+    atom_write = Encoding.atom_write()
+    atom_delete = Encoding.atom_delete()
+
+    case entry_kind do
+      {:ok, ^atom_write} -> read_write_entry(fd)
+      {:ok, ^atom_delete} -> read_delete_entry(fd)
+      {:ok, atom} -> {:error, {:no_entry_kind, atom}}
+      other -> other
+    end
+  end
+  ...
+```
+
+For write entries, we need to read:
+
+1. The key size (16 bit int)
+2. The value size (32 bit int)
+3. The key, which we parse from binary into a term using `:erlang.binary_to_term/1`
+4. The value, which we also parse from binary into a term
+
+Then we return the parsed entry in the form `{:w, key, value}`.
+
+```elixir {linenos=inline linenostart=70 title="/lib/matryoshka/impl/log_store/deserialize.ex"}
+  ...
+  def read_write_entry(fd) do
+    with {:ok, key_size} <- 
+           read_big_unsigned_integer(fd, Encoding.key_bitsize()),
+         {:ok, value_size} <- 
+           read_big_unsigned_integer(fd, Encoding.value_bitsize()),
+         {:ok, key} <-
+           binread_then_map(fd, key_size, &binary_to_term/1),
+         {:ok, value} <-
+           binread_then_map(fd, value_size, &binary_to_term/1) do
+      {:ok, {Encoding.atom_write(), key, value}}
+    else
+      error -> error
+    end
+  end
+  ...
+```
+
+For delete entries, we only need to read the key size and the key, parse the key into a term, then return the parsed entry in the form `{:d, key}`.
+
+```elixir {linenos=inline linenostart=85 title="/lib/matryoshka/impl/log_store/deserialize.ex"}
+  ...
+  def read_delete_entry(fd) do
+    with {:ok, key_size} <- 
+           read_big_unsigned_integer(fd, Encoding.key_bitsize()),
+         {:ok, key} <-
+           binread_then_map(fd, key_size, &binary_to_term/1) do
+      {:ok, {Encoding.atom_delete(), key}}
+    else
+      error -> error
+    end
+  end
+  ...
+```
+
+Now that we can read one entry at a time, we need the ability to read through the entire log file, keeping track of:
+
+- what keys (references) we've seen
+- the position in the file that the associated value has
+- the size of the associated value
+
+These will eventually become the index in LogStore, a map of type `reference -> {value_position, value_size}`.
+
+We start with a helper function `load_offsets/1` which takes the file descriptor of the log file. `load_offsets/1` starts off loading the offsets with an empty index map and a position of 0 (i.e. because we're at the beginning of the file):
+
+```elixir {linenos=inline linenostart=95 title="/lib/matryoshka/impl/log_store/deserialize.ex"}
+  ...
+  # ............... Load Offsets and Value Size ..............
+
+  def load_offsets(fd) do
+    load_offsets(fd, Map.new(), 0)
+  end
+  ...
+```
+
+OK, so now, how do we read the log file?
+
+Firstly, let's set our position in the file to the current offset that was passed in. We've already read up to this position, so we should continue reading the file from it.
+
+```elixir {linenos=inline linenostart=101 title="/lib/matryoshka/impl/log_store/deserialize.ex"}
+  ...
+  def load_offsets(fd, offsets, current_offset) do
+    :file.position(fd, current_offset)
+    ...
+```
+
+Afterwards, we'll read the timestamp and entry-type atom, which we'll use to read the key term, key size, and value size from the entry (more on this later):
+
+```elixir {linenos=inline linenostart=104 title="/lib/matryoshka/impl/log_store/deserialize.ex"}
+    ...
+    with {:ok, _timestamp} <- read_timestamp(fd),
+         {:ok, entry_kind} <- read_atom(fd),
+         {:ok, {key, key_size, value_size}} <-
+           load_offsets_entry(fd, entry_kind) do
+      ...
+```
+
+Now, it's time to calculate the various sizes we need. We'll need two sizes:
+
+1. `relative_offset_to_value`, which is calculated as the size of the log entry from the beginning of the timestamp to the beginning of the value
+    - Delete entries have no value, so this is calculated as the whole delete entry size
+2. `relative_offset_to_end`, which is calculated as the size of the whole log entry (including the value for write entries)
+
+```elixir {linenos=inline linenostart=109 title="/lib/matryoshka/impl/log_store/deserialize.ex"}
+      ...
+      relative_offset_to_value =
+        case value_size do
+          nil ->
+            Encoding.delete_entry_size(key_size)
+
+          _nonzero ->
+            Encoding.write_entry_pre_value_size(key_size)
+        end
+
+      relative_offset_to_end =
+        case value_size do
+          nil -> Encoding.delete_entry_size(key_size)
+          value_size -> Encoding.write_entry_size(key_size, value_size)
+        end
+      ...
+```
+
+Now we need to calculate the `value_offset`, which is the absolute position of the value in the log file. This is equal to the current offset (which is set to the starting position of the timestamp). We then put the information into the offsets map, which we'll later use as the index in LogStore:
+
+```elixir {linenos=inline linenostart=124 title="/lib/matryoshka/impl/log_store/deserialize.ex"}
+      ...
+      value_offset =
+        current_offset + relative_offset_to_value
+
+      offsets = Map.put(offsets, key, {value_offset, value_size})
+      ...
+```
+
+And then we need to calculate the position of the end of the entry, so that we can continue the recursion with the current offset set to the start of the next entry. We continue until we reach an `:eof` which informs us that we've traversed the entire log file, and therefore we can return the offsets:
+
+```elixir {linenos=inline linenostart=129 title="/lib/matryoshka/impl/log_store/deserialize.ex"}
+      ...
+      absolute_offset =
+        current_offset + relative_offset_to_end
+
+      load_offsets(fd, offsets, absolute_offset)
+    else
+      :eof -> offsets
+    end
+  end
+  ...
+```
+
+OK so that's all well and good, but we still need to fill in the loading of the offset entries. `load_offsets_entry/2` delegates the offset loading to either `load_offsets_write_entry/1` or `load_offsets_write_entry/1` depending on the entry-type atom:
+
+```elixir {linenos=inline linenostart=138 title="/lib/matryoshka/impl/log_store/deserialize.ex"}
+  ...
+  def load_offsets_entry(fd, entry_kind) do
+    atom_write = Encoding.atom_write()
+    atom_delete = Encoding.atom_delete()
+
+    case entry_kind do
+      ^atom_write -> load_offsets_write_entry(fd)
+      ^atom_delete -> load_offsets_delete_entry(fd)
+      atom when is_atom(atom) -> {:error, {:no_lin_kind, atom}}
+      other -> other
+    end
+  end
+  ...
+```
+
+To load the offsets for a write entry, we read:
+
+1. The key size
+2. The value size
+3. The key, which we parse from binary into a term
+
+Then return this info in a tuple `{key, key_size, value_size}`:
+
+```elixir {linenos=inline linenostart=150 title="/lib/matryoshka/impl/log_store/deserialize.ex"}
+  ...
+  def load_offsets_write_entry(fd) do
+    with {:ok, key_size} <- 
+           read_big_unsigned_integer(fd, Encoding.key_bitsize()),
+         {:ok, value_size} <- 
+           read_big_unsigned_integer(fd, Encoding.value_bitsize()) do
+      binread_then_map(fd, key_size, fn key_bin ->
+        key = binary_to_term(key_bin)
+        {key, key_size, value_size}
+      end)
+    end
+  end
+  ...
+```
+
+To load the offsets for a delete entry, we read:
+
+1. The key size
+2. The key, which we parse from binary into a term
+
+And we also set the value size to `nil` since there's no value in a delete entry. We'll take advantage of this when retrieving values in LogStore, as we'll know that we can return an error for `fetch/2` or `nil` for `get/2`.
+
+`load_offsets_delete_entry/1` then returns this info in a tuple `{key, key_size, nil}`:
+
+```elixir {linenos=inline linenostart=160 title="/lib/matryoshka/impl/log_store/deserialize.ex"}
+  ...
+  def load_offsets_delete_entry(fd) do
+    key_size = read_big_unsigned_integer(fd, Encoding.key_bitsize())
+
+    binread_then_map(fd, key_size, fn key_bin ->
+      key = binary_to_term(key_bin)
+      {key, key_size, nil}
+    end)
+  end
+  ...
+```
+
+That concludes indexing the log file. We just need to add a function to use the value offset and value size data to read values from the log file, which we do in `get_value/3`:
+
+1. We read `size` bytes from the position `offset` using the Erlang function `:file.pread/3`
+2. Then, if the bytes are successfully read, we convert the bytes back into a term and return it
+3. Otherwise, it returns the error (`:eof` or `{:error, reason}`)
+
+```elixir {linenos=inline linenostart=169 title="/lib/matryoshka/impl/log_store/deserialize.ex"}
+  ...
+  # ----------------- Read Value at Position -----------------
+
+  def get_value(fd, offset, size) when not is_nil(size) do
+    with {:ok, bin} <- :file.pread(fd, offset, size) do
+      {:ok, binary_to_term(bin)}
+    else
+      other -> other
+    end
+  end
+end
+```
+
+### Combining into LogStore
 
 ### Packaging into PersistentStore
 
