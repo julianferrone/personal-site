@@ -498,7 +498,7 @@ end
 
 ## Exposing to the outside world
 
-Of course, now that we've defined our implementation logics, it's time to expose them in the Matryoshka module:
+Great, we've defined the business logic for a few new useful store combinators, which means that it's time to expose them in the Matryoshka module:
 
 ```elixir {linenos=inline linenostart=17 hl_lines=["3-5", 9, 11] title="/lib/matryoshka.ex"}
   ...
@@ -517,7 +517,11 @@ end
 
 ## Next steps
 
-OK so, we've run into a bit of an issue when it comes to the usability of Matryoshka. We've got a bunch of storage combinators to add all sorts of functionality, which is great, but all our stores so far have been in-memory only; so we lose all the data when the store closes (i.e. because the store BEAM process terminates). But now that we've implemented CachingStore, we have the ability to cache data using a fast in-memory store and a source on-disk store. So I think it's high time we add stores that persist data to disk.
+There's a glaring issue when it comes to using Matryoshka as a storage backend that I've not discussed yet. 
+
+We've got a bunch of storage combinators to add all sorts of functionality, which is great, but all our stores so far have been in-memory only; so we lose all the data when the store closes (i.e. because the store BEAM process terminates). 
+
+Now that we've implemented CachingStore, we have the ability to cache data using a fast store (which we can keep in-memory) with a backup main store (which we'll keep on disk). So I think it's high time we add stores that persist data to disk.
 
 We'll be doing that in the next post in this series.
 
