@@ -61,7 +61,6 @@ I'll also add a helper function `mapping_store/2` to create the struct. We can c
 ```elixir {linenos=inline linenostart=22 title="/lib/matryoshka/impl/mapping_store.ex"}
   ...
   def mapping_store(inner, opts \\ []) do
-    IsStorage.is_storage!(inner)
     map_ref = Keyword.get(opts, :map_ref, @identity)
     map_retrieved = Keyword.get(opts, :map_retrieved, @identity)
     map_to_store = Keyword.get(opts, :map_to_store, @identity)
@@ -82,7 +81,7 @@ Now we just need to define the Storage protocol for the module. Like all our sto
 - mapping retrieved values with `map_retrieved/1`
 - mapping stored values with `map_to_store/1`
 
-```elixir {linenos=inline linenostart=36 title="/lib/matryoshka/impl/mapping_store.ex"}
+```elixir {linenos=inline linenostart=35 title="/lib/matryoshka/impl/mapping_store.ex"}
   ...
   alias __MODULE__
 
@@ -358,9 +357,144 @@ end
 
 ### CachingStore
 
-Ah, but we run into an issue with CachingStore.
+The BackupStore is useful for keeping auxiliary stores updated with values, but we can never actually use those backup stores to retrieve values. It would be nice to use those alternate stores when the first store we check doesn't have the value, so let's create a CachingStore that caches data with the following requirements:
 
-Thankfully, there's a simple fix: we require `fetch/2` and `get/2` to return
+- On puts and deletes, it keeps both the main store and a cache store updated
+- On gets and fetches:
+    - It checks the cache store first
+    - If there's no value in the cache store, it checks the main store
+    - If there's a value in the main store, it updates the cache store and returns the value
+    - Otherwise, it returns `nil` or an `{:error, reason}`
+
+Ah, but we run into an issue; `fetch/2` and `get/2` only return a value, they don't return the store. That means we can't mutate the CachingStore on gets and fetches, as we'd need to mutate the cache store inside. But we can fix that pretty easily by requiring `fetch/2` and `get/2` to return a tuple of `{store, value}` instead of just `value`. That way, we can have CachingStore update the cache store when the value is retrieved from the main store.
+
+There are some drawbacks to this update:
+
+- This does remove the idempotency assumption of value retrieval
+    - i.e. a fetch or a get on a store can change it
+    - so multiple fetches or gets on a store in sequence can exercise different code paths
+- We'll need to update all the previous stores in Matryoshka to return the store in their `fetch/2` and `get/2` implementations as well 
+    - I won't show this, it's simple bookkeeping
+- We'll need to update the Server implementation to use the returned stores to update the state
+
+But I think it's well worth it for caching.
+
+Once more, we start with a struct and a helper function `caching_store/2` to build the struct. I've also specialised the constructor function into `caching_store/1`, which defaults to using a MapStore as the fast cache store.
+
+```elixir {linenos=inline title="/lib/matryoshka/impl/caching_store.ex"}
+defmodule Matryoshka.Impl.CachingStore do
+  alias Matryoshka.IsStorage
+  alias Matryoshka.Storage
+  import Matryoshka.Impl.MapStore, only: [map_store: 0]
+
+  @enforce_keys [:main_store, :cache_store]
+  defstruct [:main_store, :cache_store]
+
+  @type t :: %__MODULE__{
+          main_store: IsStorage.t(),
+          cache_store: IsStorage.t()
+        }
+
+  def caching_store(main_storage), do: caching_store(main_storage, map_store())
+
+  def caching_store(main_storage, fast_storage)
+      when is_struct(main_storage) and is_struct(fast_storage) do
+    %__MODULE__{main_store: main_storage, cache_store: fast_storage}
+  end
+  ...
+```
+
+Both `fetch/2` and `get/2` follow the same general idea:
+
+- First, we try to retrieve the value from cache store
+- If the value exists in the cache store, we update the CachingStore with the updated cache store, then return the CachingStore and value in the shape `{store, value}`
+- If the value doesn't exist in the cache store, we try to retrieve the value from the main store
+- If the value exists in the main store, we put the value into the cache store, update the CachingStore with the updated main and cache stores, then return the CachingStore and value in the shape `{store, value}`
+- If the value doesn't exist in either store, we return the original store and either `nil` or `{:error, reason}` in the shape `{store, error_value}`
+
+```elixir {linenos=inline linenostart=20 title="/lib/matryoshka/impl/caching_store.ex"}
+  ...
+  alias __MODULE__
+
+  defimpl Storage do
+    def fetch(store, ref) do
+      {cache_store_new, val_fast} = Storage.fetch(store.cache_store, ref)
+
+      case val_fast do
+        {:ok, _value} ->
+          new_store = %{store | cache_store: cache_store_new}
+          {new_store, val_fast}
+
+        {:error, _reason_fast} ->
+          {main_store_new, val_main} = Storage.fetch(store.main_store, ref)
+
+          case val_main do
+            {:ok, value} ->
+              cache_store_new = Storage.put(cache_store_new, ref, value)
+              new_store = CachingStore.caching_store(
+                main_store_new, 
+                cache_store_new
+              )
+              {new_store, val_main}
+
+            {:error, reason} ->
+              {store, {:error, reason}}
+          end
+      end
+    end
+
+    def get(store, ref) do
+      {cache_store_new, val_fast} = Storage.get(store.cache_store, ref)
+
+      case val_fast do
+        nil ->
+          {main_store_new, val_main} = Storage.get(store.main_store, ref)
+
+          case val_main do
+            nil ->
+              store_new = CachingStore.caching_store(
+                main_store_new, 
+                cache_store_new
+              )
+              {store_new, nil}
+
+            value ->
+              cache_store_new = Storage.put(cache_store_new, ref, value)
+              store_new = CachingStore.caching_store(
+                main_store_new, 
+                cache_store_new
+              )
+              {store_new, value}
+          end
+
+        value ->
+          store_new = %{store | cache_store: cache_store_new}
+          {store_new, value}
+      end
+    end
+    ...
+```
+
+The code for `put/3` and `delete/2` on the other hand is much easier. We update both stores (main and cache), then wrap them into a CachingStore struct:
+
+```elixir {linenos=inline linenostart=79 title="/lib/matryoshka/impl/caching_store.ex"}
+    ...
+    def put(store, ref, value) do
+      main_store = Storage.put(store.main_store, ref, value)
+      cache_store = Storage.put(store.cache_store, ref, value)
+      CachingStore.caching_store(main_store, cache_store)
+    end
+
+    def delete(store, ref) do
+      main_store = Storage.delete(store.main_store, ref)
+      cache_store = Storage.delete(store.cache_store, ref)
+      CachingStore.caching_store(main_store, cache_store)
+    end
+  end
+end
+```
+
+...and that's CachingStore done.
 
 ## Exposing to the outside world
 
@@ -371,7 +505,7 @@ Of course, now that we've defined our implementation logics, it's time to expose
   # Business logic
   defdelegate backup_store(source_store, target_stores), to: BackupStore
   defdelegate caching_store(main_store), to: CachingStore
-  defdelegate caching_store(main_store, fast_store), to: CachingStore
+  defdelegate caching_store(main_store, cache_store), to: CachingStore
   defdelegate logging_store(store), to: LoggingStore
   defdelegate map_store(), to: MapStore
   defdelegate map_store(map), to: MapStore
