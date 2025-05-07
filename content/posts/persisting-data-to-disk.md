@@ -661,9 +661,131 @@ end
 
 ### Combining into LogStore
 
+Finally it's time to wrap up all this functionality into the LogStore.
+
+The LogStore will need 3 components:
+
+1. A reader, which will read values from the log file on `fetch/2` and `get/2`
+2. A writer, which will append new entries to the log file on `put/3` and `delete/2`
+3. An index, which will store the mapping `reference -> {value position, value size}` we receive from `Deserialize.load_offsets/1`.
+
+We start, as always, with a struct and a constructor function.
+
+We do want to be careful with `log_store/1`, however. If the log file already exists, we want to load the offsets into the LogStore index beforehand, and open the writer in append mode (so that all writes go to the end of the file). If the log file doesn't already exist, we'll open the writer in write mode (which creates an empty log file) before recreating the reader and initializing an empty index map.
+
+```elixir {linenos=inline title="/lib/matryoshka/impl/log_store/log_store.ex"}
+defmodule Matryoshka.Impl.LogStore do
+  alias Matryoshka.Impl.LogStore.Deserialize
+  alias Matryoshka.Impl.LogStore.Serialize
+  alias Matryoshka.Storage
+
+  @enforce_keys [:reader, :writer, :index]
+  defstruct @enforce_keys
+
+  @type t :: %__MODULE__{
+          reader: File.io_device(),
+          writer: File.io_device(),
+          index: map()
+        }
+
+  def log_store(log_filepath) do
+    {reader, writer, index} =
+      case File.open(log_filepath, [:binary, :read]) do
+        {:ok, reader} ->
+          index = Deserialize.load_offsets(reader)
+          {:ok, writer} = File.open(log_filepath, [:binary, :append])
+          {reader, writer, index}
+
+        {:error, _reason} ->
+          {:ok, writer} = File.open(log_filepath, [:binary, :write])
+          {:ok, reader} = File.open(log_filepath, [:binary, :read])
+          index = Map.new()
+          {reader, writer, index}
+      end
+
+    %__MODULE__{reader: reader, writer: writer, index: index}
+  end
+  ...
+```
+
+Now, let's implement the storage protocols. `fetch/2` is the most complicated as we want to return a reason when there's an error retrieving the value. We tag both steps in the `with` macro with an initial (`:index` or `:store`) so that we can pattern match on the individual steps and reformat the errors into our `{:error, reason}` format. On line **48** you can see that if the index map returns a `nil`, we know that the value has been deleted, so we return a "No reference" error.
+
+```elixir {linenos=inline linenostart=32 hl_lines=[17] title="/lib/matryoshka/impl/log_store/log_store.ex"}
+  ...
+  defimpl Storage do
+    def fetch(store, ref) do
+      value =
+        with {:index, {:ok, {offset, size}}} when not is_nil(size) <-
+               {:index, Map.fetch(store.index, ref)},
+             {:store, {:ok, value}} <-
+               {:store,
+                Deserialize.get_value(
+                  store.reader,
+                  offset,
+                  size
+                )} do
+          value
+        else
+          {:index, :error} -> {:error, {:no_ref, ref}}
+          {:index, {:ok, {_position, nil}}} -> {:error, {:no_ref, ref}}
+          {:store, {:error, reason}} -> {:error, reason}
+          {:store, :eof} -> {:error, :eof}
+        end
+
+      {store, value}
+    end
+    ...
+```
+
+`get/2` on the other hand is much easier, as we simply return `nil` on any error:
+
+- if the value size is nil
+- if the value info isn't found in the index (from `Map.fetch(store.index, ref)`)
+- if the value isn't found in the log file
+
+```elixir {linenos=inline linenostart=55 title="/lib/matryoshka/impl/log_store/log_store.ex"}
+    ...
+    def get(store, ref) do
+      value =
+        with {:ok, {offset, size}} when not is_nil(size) <-
+               Map.fetch(store.index, ref),
+             {:ok, value} <-
+               Deserialize.get_value(store.reader, offset, size) do
+          value
+        else
+          _ -> nil
+        end
+
+      {store, value}
+    end
+    ...
+```
+
+`put/2` and `delete/2` are even more simple. We append an entry (write for puts, delete for deletes) to the log file, update the index with the value information, then return the updated LogStore:
+
+```elixir {linenos=inline linenostart=69 title="/lib/matryoshka/impl/log_store/log_store.ex"}
+    ...
+    def put(store, ref, value) do
+      {position, size} = Serialize.append_write_log_entry(store.writer, ref, value)
+      index = Map.put(store.index, ref, {position, size})
+      %{store | index: index}
+    end
+
+    def delete(store, ref) do
+      {position, size} = Serialize.append_delete_log_entry(store.writer, ref)
+      index = Map.put(store.index, ref, {position, size})
+      %{store | index: index}
+    end
+  end
+end
+```
+
+And with that, we have finally finished writing the append-only-log-backed store LogStore.
+
 ### Packaging into PersistentStore
 
 PersistentStore as example of pre-composed store
+
 
 ## Exposing to Matryoshka consumers 
 
