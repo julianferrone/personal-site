@@ -6,6 +6,7 @@ tags:
 - elixir
 - programming
 publishDate: '2025-07-14'
+series: matryoshka
 ---
 
 Adding update(store, ref, function, default) to Storage protocol and updating all stores

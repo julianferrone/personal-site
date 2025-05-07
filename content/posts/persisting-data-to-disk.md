@@ -6,6 +6,7 @@ tags:
 - elixir
 - programming
 publishDate: 2025-06-09
+series: matryoshka
 ---
 
 We left off in the last post having written a few extra storage combinators, including a CachingStore that lets us check multiple stores (one as a cache store, one as a main source-of-truth store). But all our stores are in-memory only, which means we'll lose all our data when the store processes finish.

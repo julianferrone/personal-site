@@ -6,6 +6,7 @@ tags:
 - elixir
 - programming
 publishDate: 2025-05-19
+series: matryoshka
 ---
 
 Let's add some more stores and store combinators to Matryoshka, my composable storage library in Elixir.
