@@ -55,7 +55,7 @@
 **************/
 
 html {
-	scroll-behavior: smooth;
+    scroll-behavior: smooth;
     scroll-padding-top: 4em;
 }
 
@@ -80,6 +80,8 @@ body {
 ********************** Navigation Bar **********************
 ***********************************************************/
 
+@media (min-width: 601px) {}
+
 .navbar {
     position: fixed;
     top: 0;
@@ -89,16 +91,11 @@ body {
     background-color: var(--clr-dark-a0);
 }
 
-.nav-left {
-    display: flex;
+.push {
+    margin-left: auto;
 }
 
-.nav-right {
-    display: flex;
-}
-
-.nav-left a,
-.nav-right a {
+.navbar a {
     padding: 0.5rem 1rem;
     font-weight: bold;
     text-decoration: none;
@@ -106,23 +103,18 @@ body {
     font-size: x-large;
 }
 
-
-.nav-left a:hover,
-.nav-right a:hover {
+.navbar a:hover {
     background-color: var(--clr-surface-a0);
     color: var(--clr-dark-a0);
 }
 
-
-.nav-left #theme-switch,
-.nav-right #theme-switch {
+.navbar #theme-switch {
     padding: 0.5rem 1rem;
     background-color: var(--clr-dark-a0);
     border-style: none;
 }
 
-.nav-left #theme-switch:hover,
-.nav-right #theme-switch:hover {
+.navbar #theme-switch:hover {
     background-color: var(--clr-surface-a50);
 }
 

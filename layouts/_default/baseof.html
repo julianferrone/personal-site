@@ -16,17 +16,13 @@
 
 <body>
     <nav class="navbar">
-        <div class="nav-left">
-            <a href="/">Home</a>
-        </div>
-        <div class="nav-right">
-            <a href="/posts/">Posts</a>
-            <a href="/tags/">Tags</a>
-            <a href="/about">About</a>
-            <button id="theme-switch">
-                <img src="/white_sun.svg" alt="">
-            </button>
-        </div>
+        <a href="/">Home</a>
+        <a class="push" href="/posts/">Posts</a>
+        <a href="/tags/">Tags</a>
+        <a href="/about">About</a>
+        <button id="theme-switch">
+            <img src="/white_sun.svg" alt="">
+        </button>
     </nav>
     <div class="container">
         <h1> {{ .Title }} </h1>
