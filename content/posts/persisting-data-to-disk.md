@@ -874,9 +874,7 @@ end
 
 ## Next steps
 
-OK, we've got some disk stores now that will let us persist data, keeping it safe between restarts.
-
-Now that we've got local persistent stores, why not go the complete opposite direction and build some remote stores? That is, let's build some stores which compute their storage call results by sending network requests to other servers.
+OK, we've got some disk stores now that will let us persist data, keeping it safe between restarts. Why not go the complete opposite direction and build some remote stores? That is, let's build some stores which compute their storage call results by sending network requests to other servers.
 
 We'll be doing that in the next post in this series.
 
