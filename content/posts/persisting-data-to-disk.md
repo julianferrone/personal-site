@@ -226,8 +226,6 @@ We also need a helper function to calculate how many bits are in a byte, which w
 
 We want to minimise how much data the LogStore has to read from disk whenever we retrieve a value. To do so, we'll be storing an in-memory index, which maps references to a combination of file position (where the value starts in the file) and the value size. Whenever we want to retrieve the value for a reference, we'll go to the file position for that reference, then read the number of bytes the index tells us.
 
-As such, whenever we're appending entries to the log file, or reading the log file on a cold start, it'll be very useful to calculate the sizes of the delete entry, the write entry, or the size of the write entry up until the value starts.
-
 By adding together the position of the start of the write entry with the size of the write entry (without the value), we'll get the absolute position of the value, which we can save in our index, so that we know what position to start reading the file from in order to retrieve the value.
 
 ```goat
@@ -243,6 +241,8 @@ By adding together the position of the start of the write entry with the size of
                  +--------------- Size of write entry pre-value --------------+
                                     
 ```
+
+As such, whenever we're appending entries to the log file, or reading the log file on a cold start, it'll be very useful to calculate the sizes of the delete entry, the write entry, or the size of the write entry up until the value starts.
 
 ```elixir {linenos=inline linenostart=26 title="/lib/matryoshka/impl/log_store/encoding.ex"}
   ...
