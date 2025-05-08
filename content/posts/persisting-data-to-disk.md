@@ -53,7 +53,7 @@ Since the provided refs are going to be considered as paths relative to the root
   ...
 ```
 
-Then we can implement the Storage methods by reading from files:
+Then we can implement the Storage methods by reading from files. We first find the absolute path to the file that stores the value by combining the root directory of the store with the reference, then read the file and return the value:
 
 ```elixir {linenos=inline linenostart=22 title="/lib/matryoshka/impl/filesystem_store.ex"}
   alias __MODULE__
@@ -81,7 +81,7 @@ Then we can implement the Storage methods by reading from files:
     ...
 ```
 
-...and writing to files:
+To update the values (i.e. by putting a new value in or deleting the current value), we do the same absolute filepath operation, then either write to the file (making sure to create the parent directories) or delete the file.
 
 ```elixir {linenos=inline linenostart=44 title="/lib/matryoshka/impl/filesystem_store.ex"}
     ...
@@ -103,65 +103,76 @@ Then we can implement the Storage methods by reading from files:
 end
 ```
 
-However, there's a few issues with FilesystemStore. For a start, it only works with stringified keys and values. If we want to use it to store maps, lists, even integers, we'd need to compose it with a MappingStore. Also, it uses a new file for every value, which seems very wasteful. Perhaps this would be useful for storing extremely large values (on the order of megabytes), but not for 
+However, there's a few issues with FilesystemStore. For a start, it only works with stringified keys and values. If we want to use it to store maps, lists, even integers, we'd need to compose it with a MappingStore---something like a JsonStore or an XmlStore that maps Elixir terms into JSONified strings or XML documents. 
+
+Also it uses a new file for every value---there's definitely use-cases for that since we may want to store quite large values, but it seems wasteful on small values.
+
+Oh, and there's no history of the puts and deletes in the store---once a value is overwritten, it's gone forever. It would be nice to be able to step through the history of a value for things like auditing and bug-hunting.
 
 We'll build LogStore with these limitations in mind.
 
 ## LogStore
 
-*Firstly, I'd like to note that the code in this implementation is heavily inspired by the approach in [Build a Simple Persistent Key-Value Store in Elixir, using Logs – Part 2](https://www.poeticoding.com/build-a-simple-persistent-key-value-store-in-elixir-using-logs-part-2/). I've made some changes to deal with arbitrary keys and values, along with deleting values, but this article helped me immensely in understanding how append-only log-backed key-values stores work, along with giving me ideas on how to structure my log entries.*
+*The code in this implementation is heavily inspired by the approach in [Build a Simple Persistent Key-Value Store in Elixir, using Logs – Part 2](https://www.poeticoding.com/build-a-simple-persistent-key-value-store-in-elixir-using-logs-part-2/). I've made some upgrades to deal with arbitrary terms for keys and values, along with deleting values, but this article helped me immensely in understanding how append-only log-backed key-values stores work, along with giving me ideas on how to structure my log entries.*
 
 The secret sauce to LogStore is `:erlang.term_to_binary/1` and `:erlang.binary_to_term/1`, which encode and decode Erlang (and Elixir) terms to and from binary. This is going to let us serialize any kinds of references and values we want to the log file, which fixes the first issue with FilesystemStore (only being able to read and write with string references and string values).
 
-Whenever we make an update (put or delete) to LogStore, we'll append a log entry, in binary encoding, to the log file. We'll store the position and size of the value in an index map, which will allow us to read exactly `size` bytes from the file every time we want to retrieve (get or fetch) a value. All the 
+Whenever we update data (via `put/3` or `delete/2` on LogStore), we'll append a log entry, in binary encoding, to the log file. Since we're not overwriting the data that stores the current state, we'll have a timeline of all the values that have been recorded in LogStore. Whenever we retrieve a value, we use the most up-to-date version of that value, but we could theoretically parse through the log file and show the history of a value for a given reference---and all the changes are timestamped.
 
-LogStore is a lot more complicated than all the other stores we've written, so I've elected to break it up into four modules:
+After appending the entry to the log file, we'll then store the position and size (both in bytes) of the value in an index map (with shape `reference -> {position, size}`) which will allow us to read exactly `size` bytes from the file every time we want to retrieve (get or fetch) a value.
 
-| Module | Explanation |
+LogStore is a lot more complicated than all the other stores we've written, so I broke it up into four modules:
+
+| Module | Functionality |
 | --- | --- |
-| Encoding | Defines how entries in the log file are stored. |
-| Deserialize | Defines how to read data from the log file. |
-| Serialize | Defines how to write data to the log file. |
-| LogStore | Provides Storage capability by translating storage calls (put, get, fetch, delete) into reads from and writes to the log file. |
+| Encoding | Define how entries in the log file are stored. |
+| Deserialize | Read data from the log file. |
+| Serialize | Write data to the log file. |
+| LogStore | Implement the Storage protocol by translating storage calls (put, get, fetch, delete) into reads and writes on the log file. |
 
 ### Encoding
 
-The Encoding module is mainly for bookkeeping.
-
-Before we get into the code, let's work out how we're going to format our log entries. We'll have two kinds of log entries: writes, and deletes.
+The Encoding module is mainly for bookkeeping of things like how we format our log entries. We'll have two kinds of log entries: writes (for when we put data into the LogStore), and deletes (for when we delete data from the LogStore).
 
 Both kinds of log entries will start with a timestamp, then a one-letter atom which represents whether the rest of the log entry is a write entry (`:w`) or a delete entry (`:d`).
 
-Then we need some data to indicate the size of the rest of the entry---if the log entry is a write, we'll need to store both the size of the key and the size of the value, but if the log entry is a delete, we'll only need to store the size of the key.
+Then we need some more metadata to indicate the size of the rest of the entry---if the log entry is a write, we'll need to store both the size of the key and the size of the value, but if the log entry is a delete, we'll only need to store the size of the key.
 
-Finally we append the actual data:
+Finally we have the actual data:
 
 - Write entries will include the key and the value
 - Delete entries will include only the key
 
+All integers will be stored as unsigned (since neither Unix timestamps nor sizes can be negative) big-endian integers.
+
 So the entries look like this:
 
 ```goat
-Writes
-+------------+-------------+------------+------------+-------+-------------+
-| Timestamp  | WRITE       | Key Size   | Value Size | Key   | Value       |
-+------------+-------------+------------+------------+-------+-------------+
-| 64 bit int | 4 byte atom | 16 bit int | 32 bit int | Binary encoded term |
-+------------+-------------+------------+------------+---------------------+
-| Metadata                                           | Data                |
-+----------------------------------------------------+---------------------+
+         Writes
+         +------------+-------------+------------+------------+-------+-------------+
+ Segment | Timestamp  | WRITE       | Key Size   | Value Size | Key   | Value       |
+         +------------+-------------+------------+------------+-------+-------------+
+    Size | 8 bytes    | 4 bytes     | 2 bytes    | 4 bytes    | Arbitrary size      |
+         +------------+-------------+------------+------------+---------------------+
+    Type | 64 bit int | Atom binary | 16 bit int | 32 bit int | Binary encoded term |
+         +------------+-------------+------------+------------+---------------------+
+Category | Metadata                                           | Data                |
+         +----------------------------------------------------+---------------------+
 
-Deletes
-+------------+-------------+------------+---------------------+
-| Timestamp  | DELETE      | Key Size   | Key                 |
-+------------+-------------+------------+---------------------+
-| 64 bit int | 4 byte atom | 16 bit int | Binary encoded term |
-+------------+-------------+------------+---------------------+
-| Metadata                              | Data                |
-+---------------------------------------+---------------------+
+
+         Deletes
+         +------------+-------------+------------+---------------------+
+ Segment | Timestamp  | DELETE      | Key Size   | Key                 |
+         +------------+-------------+------------+---------------------+
+    Size | 8 bytes    | 4 bytes     | 2 bytes    | Arbitrary size      |
+         +------------+-------------+------------+---------------------+
+    Type | 64 bit int | Atom binary | 16 bit int | Binary encoded term |
+         +------------+-------------+------------+---------------------+
+Category | Metadata                              | Data                |
+         +---------------------------------------+---------------------+
 ```
 
-Timestamps are stored in a 64-bit unsigned int because that's enough space to hold a millisecond-precision Unix timestamp:
+Timestamps are stored in a 64-bit int because that's enough space to hold a millisecond-precision Unix timestamp.
 
 ```elixir {linenos=inline title="/lib/matryoshka/impl/log_store/encoding.ex"}
 defmodule Matryoshka.Impl.LogStore.Encoding do
@@ -175,7 +186,7 @@ defmodule Matryoshka.Impl.LogStore.Encoding do
 
 Oh, and we're also providing functions in Encoding that let the Deserialize and Serialize modules access the module attributes that we're defining---normally, module attributes are only accessible inside the module that defines them, but since we're using Encoding to store all our magic numbers (with names!) we need to be able to use those values in other modules.
 
-We'll define the maximum key and value lengths to be 2^16 bits (~66 kB) and 2^32 bits (~4.3 GB) respectively, so we'll store the key and value lengths in a 16-bit unsigned int and a 32-bit unsigned int.
+We'll define the maximum key and value lengths to be 2^16 bits (~66 kB) and 2^32 bits (~4.3 GB) respectively, so we'll store the key and value lengths in a 16-bit int and a 32-bit int.
 
 ```elixir {linenos=inline linenostart=7 title="/lib/matryoshka/impl/log_store/encoding.ex"}
   ...
@@ -217,7 +228,7 @@ We want to minimise how much data the LogStore has to read from disk whenever we
 
 As such, whenever we're appending entries to the log file, or reading the log file on a cold start, it'll be very useful to calculate the sizes of the delete entry, the write entry, or the size of the write entry up until the value starts.
 
-By adding together the position of the start of the write entry with the size of the write entry (without the value), we'll get the absolute position of the value, which we can save in our index so that we know what position to start reading the file from to retrieve the value
+By adding together the position of the start of the write entry with the size of the write entry (without the value), we'll get the absolute position of the value, which we can save in our index, so that we know what position to start reading the file from in order to retrieve the value.
 
 ```goat
                                                                       
