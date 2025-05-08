@@ -130,30 +130,38 @@ The Encoding module is mainly for bookkeeping.
 
 Before we get into the code, let's work out how we're going to format our log entries. We'll have two kinds of log entries: writes, and deletes.
 
-Both kinds of log entries will start with a timestamp. The next part of our entry is going to be a one-letter atom which represents whether the rest of the log entry is a write entry (`:w`) or a delete entry (`:d`).
+Both kinds of log entries will start with a timestamp, then a one-letter atom which represents whether the rest of the log entry is a write entry (`:w`) or a delete entry (`:d`).
 
-The next entry will need to be a size indicator. If the log entry is a write, we'll need to store both the size of the key and the size of the value. If the log entry is a delete, we'll only need to store the size of the key.
+Then we need some data to indicate the size of the rest of the entry---if the log entry is a write, we'll need to store both the size of the key and the size of the value, but if the log entry is a delete, we'll only need to store the size of the key.
 
-The final entry will be the data:
+Finally we append the actual data:
 
 - Write entries will include the key and the value
 - Delete entries will include only the key
 
+So the entries look like this:
+
 ```goat
+Writes
 +------------+-------------+------------+------------+-------+-------------+
 | Timestamp  | WRITE       | Key Size   | Value Size | Key   | Value       |
 +------------+-------------+------------+------------+-------+-------------+
 | 64 bit int | 4 byte atom | 16 bit int | 32 bit int | Binary encoded term |
 +------------+-------------+------------+------------+---------------------+
+| Metadata                                           | Data                |
++----------------------------------------------------+---------------------+
 
-+------------+-------------+------------+---------------------+              
-| Timestamp  | DELETE      | Key Size   | Key                 |              
+Deletes
++------------+-------------+------------+---------------------+
+| Timestamp  | DELETE      | Key Size   | Key                 |
 +------------+-------------+------------+---------------------+
 | 64 bit int | 4 byte atom | 16 bit int | Binary encoded term |
-+------------+-------------+------------+---------------------+               
++------------+-------------+------------+---------------------+
+| Metadata                              | Data                |
++---------------------------------------+---------------------+
 ```
 
-We'll store timestamps in a 64-bit unsigned int, which is large enough to hold a millisecond-precision Unix timestamp:
+Timestamps are stored in a 64-bit unsigned int because that's enough space to hold a millisecond-precision Unix timestamp:
 
 ```elixir {linenos=inline title="/lib/matryoshka/impl/log_store/encoding.ex"}
 defmodule Matryoshka.Impl.LogStore.Encoding do
@@ -165,7 +173,7 @@ defmodule Matryoshka.Impl.LogStore.Encoding do
   ...
 ```
 
-We also provide functions in Encoding so that the Deserialize and Serialize modules can access the module attributes that we're defining.
+Oh, and we're also providing functions in Encoding that let the Deserialize and Serialize modules access the module attributes that we're defining---normally, module attributes are only accessible inside the module that defines them, but since we're using Encoding to store all our magic numbers (with names!) we need to be able to use those values in other modules.
 
 We'll define the maximum key and value lengths to be 2^16 bits (~66 kB) and 2^32 bits (~4.3 GB) respectively, so we'll store the key and value lengths in a 16-bit unsigned int and a 32-bit unsigned int.
 
@@ -179,7 +187,7 @@ We'll define the maximum key and value lengths to be 2^16 bits (~66 kB) and 2^32
   ...
 ```
 
-Since we're using single-letter atoms to represent write vs. delete entries in the log file, we need 4 bytes to store them (single-letter atoms have a length of 4 after converting them to binary with :erlang.term_to_binary/1):
+Since we're using single-letter atoms to represent write vs. delete entries in the log file, we need 4 bytes to store them (single-letter atoms have a length of 4 after converting them to binary with `:erlang.term_to_binary/1`):
 
 
 ```elixir {linenos=inline linenostart=13 title="/lib/matryoshka/impl/log_store/encoding.ex"}
@@ -207,11 +215,23 @@ We also need a helper function to calculate how many bits are in a byte, which w
 
 We want to minimise how much data the LogStore has to read from disk whenever we retrieve a value. To do so, we'll be storing an in-memory index, which maps references to a combination of file position (where the value starts in the file) and the value size. Whenever we want to retrieve the value for a reference, we'll go to the file position for that reference, then read the number of bytes the index tells us.
 
-As such, whenever we're appending entries to the log file, or reading the log file on a cold start, it'll be very useful to calculate the sizes of:
+As such, whenever we're appending entries to the log file, or reading the log file on a cold start, it'll be very useful to calculate the sizes of the delete entry, the write entry, or the size of the write entry up until the value starts.
 
-- The delete entry
-- The write entry
-- The size of the write entry excluding the value size
+By adding together the position of the start of the write entry with the size of the write entry (without the value), we'll get the absolute position of the value, which we can save in our index so that we know what position to start reading the file from to retrieve the value
+
+```goat
+                                                                      
+     Position of write entry                               Position of value (saved in index)
+                 |                                                            |
+                 v                                                            v
+-----------------+------------+-------------+------------+------------+-------+-------------+
+ Rest of file... | Timestamp  | WRITE       | Key Size   | Value Size | Key   | Value       |
+-----------------+------------+-------------+------------+------------+-------+-------------+
+                 ^                                                            ^
+                 |                                                            |
+                 +--------------- Size of write entry pre-value --------------+
+                                    
+```
 
 ```elixir {linenos=inline linenostart=26 title="/lib/matryoshka/impl/log_store/encoding.ex"}
   ...
