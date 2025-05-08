@@ -80,8 +80,6 @@ body {
 ********************** Navigation Bar **********************
 ***********************************************************/
 
-@media (min-width: 601px) {}
-
 .navbar {
     position: fixed;
     top: 0;
@@ -96,7 +94,7 @@ body {
 }
 
 .navbar a {
-    padding: 0.5rem 1rem;
+    padding: 0.25rem 0.5rem;
     font-weight: bold;
     text-decoration: none;
     color: var(--clr-surface-a0);
@@ -109,7 +107,7 @@ body {
 }
 
 .navbar #theme-switch {
-    padding: 0.5rem 1rem;
+    padding: 0.25rem 0.5rem;
     background-color: var(--clr-dark-a0);
     border-style: none;
 }
@@ -117,6 +115,17 @@ body {
 .navbar #theme-switch:hover {
     background-color: var(--clr-surface-a50);
 }
+
+@media (min-width: 601px) { 
+    .navbar a {
+        padding: 0.5rem 1rem;
+    }
+    
+    .navbar #theme-switch {
+        padding: 0.5rem 1rem;
+    }
+}
+
 
 
 /***********************************************************
