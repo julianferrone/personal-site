@@ -44,7 +44,7 @@ defmodule Matryoshka.Impl.FilesystemStore do
 Since the provided refs are going to be considered as paths relative to the root directory of the filesystem store, let's build a function to turn these paths into absolute paths:
 
 ```elixir {linenos=inline linenostart=16 title="/lib/matryoshka/impl/filesystem_store.ex"}
-    ...
+  ...
   @spec absolute_path(t(), Reference.t()) :: Path.t()
   def absolute_path(store, ref) do
     path_segments = [store.root_dir | Reference.path_segments(ref)]
@@ -53,7 +53,7 @@ Since the provided refs are going to be considered as paths relative to the root
   ...
 ```
 
-Then we can implement the Storage methods by reading from files. We first find the absolute path to the file that stores the value by combining the root directory of the store with the reference, then read the file and return the value:
+Then we can implement the Storage methods by reading from files. We first find the absolute path to the file that stores the value by combining the root directory of the store with the reference, then read the file and return the value.
 
 ```elixir {linenos=inline linenostart=22 title="/lib/matryoshka/impl/filesystem_store.ex"}
   alias __MODULE__
@@ -115,7 +115,7 @@ We'll build LogStore with these limitations in mind.
 
 *The code in this implementation is heavily inspired by the approach in [Build a Simple Persistent Key-Value Store in Elixir, using Logs – Part 2](https://www.poeticoding.com/build-a-simple-persistent-key-value-store-in-elixir-using-logs-part-2/). I've made some upgrades to deal with arbitrary terms for keys and values, along with deleting values, but this article helped me immensely in understanding how append-only log-backed key-values stores work, along with giving me ideas on how to structure my log entries.*
 
-The secret sauce to LogStore is `:erlang.term_to_binary/1` and `:erlang.binary_to_term/1`, which encode and decode Erlang (and Elixir) terms to and from binary. This is going to let us serialize any kinds of references and values we want to the log file, which fixes the first issue with FilesystemStore (only being able to read and write with string references and string values).
+The secret sauce to LogStore is `:erlang.term_to_binary/1` and `:erlang.binary_to_term/1`, which encode and decode Erlang (and Elixir) terms to and from binary. This lets us serialize any kinds of references and values we want to the log file, which fixes the first issue with FilesystemStore (only being able to read and write with string references and string values).
 
 Whenever we update data (via `put/3` or `delete/2` on LogStore), we'll append a log entry, in binary encoding, to the log file. Since we're not overwriting the data that stores the current state, we'll have a timeline of all the values that have been recorded in LogStore. Whenever we retrieve a value, we use the most up-to-date version of that value, but we could theoretically parse through the log file and show the history of a value for a given reference---and all the changes are timestamped.
 
@@ -148,7 +148,7 @@ All integers will be stored as unsigned (since neither Unix timestamps nor sizes
 So the entries look like this:
 
 ```goat
-         Writes
+           Write Schema
          +------------+-------------+------------+------------+-------+-------------+
  Segment | Timestamp  | WRITE       | Key Size   | Value Size | Key   | Value       |
          +------------+-------------+------------+------------+-------+-------------+
@@ -160,7 +160,7 @@ Category | Metadata                                           | Data            
          +----------------------------------------------------+---------------------+
 
 
-         Deletes
+           Delete Schema
          +------------+-------------+------------+---------------------+
  Segment | Timestamp  | DELETE      | Key Size   | Key                 |
          +------------+-------------+------------+---------------------+
@@ -198,7 +198,7 @@ We'll define the maximum key and value lengths to be 2^16 bits (~66 kB) and 2^32
   ...
 ```
 
-Since we're using single-letter atoms to represent write vs. delete entries in the log file, we need 4 bytes to store them (single-letter atoms have a length of 4 after converting them to binary with `:erlang.term_to_binary/1`):
+Since we're using single-letter atoms to represent write vs. delete entries in the log file, we need 4 bytes to store them (single-letter atoms have a length of 4 after converting them to binary with `:erlang.term_to_binary/1`).
 
 
 ```elixir {linenos=inline linenostart=13 title="/lib/matryoshka/impl/log_store/encoding.ex"}
@@ -242,7 +242,7 @@ By adding together the position of the start of the write entry with the size of
                                     
 ```
 
-As such, whenever we're appending entries to the log file, or reading the log file on a cold start, it'll be very useful to calculate the sizes of the delete entry, the write entry, or the size of the write entry up until the value starts.
+As such, whenever we're appending entries to the log file, or reading the log file on a cold start, we'll need to be able to calculate the sizes of the delete entry, the write entry, or the size of the write entry up until the value starts.
 
 ```elixir {linenos=inline linenostart=26 title="/lib/matryoshka/impl/log_store/encoding.ex"}
   ...
@@ -400,7 +400,7 @@ We've finished defining how to write log entries, now it's time to define how to
 We'll start with some helper functions with IO:
 
 - `handle_io_result/2` applies a function to the result of IO.binread only if there's no error
-- `binread_then_map/3` reads a set number of bytes from a file, then applies the function using `handle_io_result/2`. This is useful for reading bits of data at a time that we can then parse.
+- `binread_then_map/3` reads a set number of bytes from a file, then applies a function to those bytes---this lets us incrementally read and parse data
 
 ```elixir {linenos=inline title="/lib/matryoshka/impl/log_store/deserialize.ex"}
 defmodule Matryoshka.Impl.LogStore.Deserialize do
@@ -422,7 +422,7 @@ defmodule Matryoshka.Impl.LogStore.Deserialize do
   ...
 ```
 
-Next, we'll add some functions to read and parse data from the file. These parse the binary into integers, atoms, or timestamps:
+Next, we'll add some functions to read and parse data from the log file. These parse the binary into simple types---integers, atoms, timestamps:
 
 ```elixir {linenos=inline linenostart=17 title="/lib/matryoshka/impl/log_store/deserialize.ex"}
   ...
