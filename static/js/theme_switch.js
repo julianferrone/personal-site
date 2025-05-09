@@ -6,14 +6,6 @@ function oppositeTheme(theme) {
     }
 }
 
-function themeIcon(theme) {
-    if (theme === "dark") {
-        return { src: '/black_moon.svg', alt: 'Dark Mode' };
-    } else {
-        return { src: '/white_sun.svg', alt: 'Light Mode' };
-    }
-}
-
 function applySyntaxTheme(theme) {
     const lightSyntax = document.getElementById('light-syntax');
     const darkSyntax = document.getElementById('dark-syntax');
@@ -27,6 +19,11 @@ function applySyntaxTheme(theme) {
     }
 }
 
+function themeIcon(theme) {
+    const fragment = (theme === 'dark' ? 'moon' : 'sun')
+    return `/img/icons.svg#${fragment}`
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     // ✅ Load saved theme or system preference
     const savedTheme = localStorage.getItem('theme');
@@ -36,25 +33,24 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log(`Initial Theme: ${initialTheme}`)
     applySyntaxTheme(initialTheme);
     document.documentElement.setAttribute('data-theme', initialTheme);
-    
-    const toggleSwitch = document.getElementById('theme-switch');
-    const img = toggleSwitch.querySelector('img');
 
-    img.src = initialIcon.src;
-    img.alt = initialIcon.alt;
+    const switchButton = document.getElementById('theme-switch');
+    const iconUse = switchButton.querySelector('#theme-icon-use');
+
+    // set icon initially
     applySyntaxTheme(initialTheme);
+    iconUse.setAttribute('href', themeIcon(initialTheme))
 
     function switchTheme(e) {
         const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
         const newTheme = oppositeTheme(currentTheme);
-        const icon_attrs = themeIcon(newTheme);
 
         document.documentElement.setAttribute('data-theme', newTheme);
         localStorage.setItem('theme', newTheme);  // ✅ Save theme
-        img.src = icon_attrs.src;
-        img.alt = icon_attrs.alt;
+
         applySyntaxTheme(newTheme);
+        iconUse.setAttribute('href', themeIcon(newTheme))
     }
 
-    toggleSwitch.addEventListener('click', switchTheme, false);
+    switchButton.addEventListener('click', switchTheme, false);
 });

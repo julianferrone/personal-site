@@ -110,10 +110,14 @@ body {
     padding: 0.25rem 0.5rem;
     background-color: var(--clr-dark-a0);
     border-style: none;
+    stroke: var(--clr-surface-a0);
+    fill: var(--clr-surface-a0);
 }
 
 .navbar #theme-switch:hover {
-    background-color: var(--clr-surface-a50);
+    background-color: var(--clr-surface-a0);
+    stroke: var(--clr-dark-a0);
+    fill: var(--clr-dark-a0);
 }
 
 @media (min-width: 601px) { 
