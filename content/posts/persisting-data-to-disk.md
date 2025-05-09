@@ -1,6 +1,6 @@
 ---
 date: "2025-05-05T19:44:26+10:00"
-draft: true
+draft: false
 title: "Matryoshka 3: Persisting Data to Disk"
 tags:
 - elixir
@@ -689,7 +689,7 @@ And we also set the value size to `nil` since there's no value in a delete entry
   ...
 ```
 
-That concludes indexing the log file. We just need to add a function to use the value offset and value size data to read values from the log file, which we do in `get_value/3`:
+Now we're done with indexing the log file. We just need to add a function to use the value offset and value size data to read values from the log file, which we do in `get_value/3`:
 
 1. We read `size` bytes from the position `offset` using the Erlang function `:file.pread/3`
 2. Then, if the bytes are successfully read, we convert the bytes back into a term and return it
@@ -758,7 +758,7 @@ defmodule Matryoshka.Impl.LogStore do
   ...
 ```
 
-Now, let's implement the storage protocols. `fetch/2` is the most complicated as we want to return a reason when there's an error retrieving the value. We tag both steps in the `with` macro with an initial (`:index` or `:store`) so that we can pattern match on the individual steps and reformat the errors into our `{:error, reason}` format. On line **48** you can see that if the index map returns a `nil`, we know that the value has been deleted, so we return a "No reference" error.
+Now, let's implement the storage protocols. `fetch/2` is the most complicated as we want to return a reason when there's an error retrieving the value. We tag both steps in the `with` macro with an atom (`:index` or `:store`) so that we can pattern match on the individual steps and reshape any errors into our `{:error, reason}` format. On line **48** you can see that if the index map returns a `nil`, we know that the value has been deleted, so we return a "no reference" error without needing to check the log file.
 
 ```elixir {linenos=inline linenostart=32 hl_lines=[17] title="/lib/matryoshka/impl/log_store/log_store.ex"}
   ...
