@@ -147,7 +147,7 @@ body {
     display: grid;
     grid-template-columns: 120px 1fr max-content;
     gap: 1rem;
-    align-items: center;
+    align-items: start;
 }
 
 .post-date {
