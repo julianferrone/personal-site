@@ -5,9 +5,9 @@ on:
       - 'main'
   schedule:
     # * is a special character in YAML so you have to quote this string
-    # 3:30 pm UTC is 1:30 am Sydney time
+    # 4:30 pm UTC is 2:30 am Sydney time
     # This allows me to schedule posts
-    - cron:  '30 15 * * *'
+    - cron:  '30 16 * * *'
 jobs:
   build:
     runs-on: ubuntu-latest
