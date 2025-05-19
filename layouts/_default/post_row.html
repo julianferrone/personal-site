@@ -5,14 +5,12 @@
     </div>
     <div class="post-tags">
         {{ if .Params.tags }}
-        <ul>
-            {{ range sort .Params.tags }}
-            {{ $href := add "../tags#" . }}
-            <li>
-                <a href="{{ $href }}">{{ . }}</a>
-            </li>
-            {{ end }}
-        </ul>
+        {{ range sort .Params.tags }}
+        {{ $href := add "../tags#" . }}
+        <div class="post-tag">
+            <a href="{{ $href }}">{{ . }}</a>
+        </div>
+        {{ end }}
         {{ end }}
     </div>
 </div>
