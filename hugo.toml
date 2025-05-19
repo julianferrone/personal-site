@@ -1,6 +1,7 @@
 baseURL = 'https://julianferrone.com'
 languageCode = 'en-us'
 title = 'Julian Ferrone'
+timeZone = 'Australia/Sydney'
 
 [taxonomies]
 tag = "tags"
