@@ -152,7 +152,13 @@ body {
 
 .post-date {
     font-family: 'Berkeley Mono', Courier, monospace;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
+}
+
+@media (min-width: 601px) {
+    .post-date {
+        font-size: 1.2rem;
+    }
 }
 
 /**************
@@ -161,12 +167,18 @@ body {
 
 .post-title a {
     color: var(--clr-dark-a0);
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     text-decoration: dashed underline;
 }
 
 .post-title a:hover {
     color: var(--clr-primary-a0);
+}
+
+@media (min-width: 601px) {
+    .post-title a {
+        font-size: 1.2rem;
+    }
 }
 
 /**************
