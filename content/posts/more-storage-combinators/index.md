@@ -7,6 +7,7 @@ tags:
 - programming
 publishDate: 2025-05-19
 series: matryoshka
+summary: 'I add more stores and store combinators to Matryoshka, my composable key-value storage Elixir library.'
 ---
 
 Let's add some more stores and store combinators to Matryoshka, my composable storage library in Elixir.
