@@ -147,12 +147,18 @@ body {
     display: grid;
     grid-template-columns: 120px 1fr max-content;
     gap: 1rem;
-    align-items: center;
+    align-items: start;
 }
 
 .post-date {
     font-family: 'Berkeley Mono', Courier, monospace;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
+}
+
+@media (min-width: 601px) {
+    .post-date {
+        font-size: 1.2rem;
+    }
 }
 
 /**************
@@ -161,7 +167,7 @@ body {
 
 .post-title a {
     color: var(--clr-dark-a0);
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     text-decoration: dashed underline;
 }
 
@@ -169,20 +175,31 @@ body {
     color: var(--clr-primary-a0);
 }
 
+@media (min-width: 601px) {
+    .post-title a {
+        font-size: 1.2rem;
+    }
+}
+
 /**************
 ********* Post Tags
 **************/
 
-.post-tags a {
-    font-size: 0.9em;
-    text-decoration: dotted underline;
-    color: var(--clr-dark-a0-subtle)
+.post-tags {
+    display: none;
 }
 
-.post-tags a:hover {
-    color: var(--clr-dark-a0)
-}
+@media (min-width: 601px) {
+    .post-tags a {
+        font-size: 0.9em;
+        text-decoration: dotted underline;
+        color: var(--clr-dark-a0-subtle)
+    }
 
+    .post-tags a:hover {
+        color: var(--clr-dark-a0)
+    }
+}
 /***********************************************************
 ************************** Tables **************************
 ***********************************************************/
