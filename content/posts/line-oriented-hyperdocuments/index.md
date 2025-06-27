@@ -1,3 +1,14 @@
+---
+date: '2025-05-05T10:18:45+10:00'
+draft: false
+title: 'Line-Oriented Hyperdocuments with Subtext'
+tags:
+- haskell
+- programming
+publishDate: '2025-05-05'
+series: subtext
+---
+
 TODO: introduction, Gordon Brandon's Subtext
 
 TODO: XKCD "1 more standard"
