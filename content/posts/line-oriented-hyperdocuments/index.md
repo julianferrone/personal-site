@@ -1,6 +1,6 @@
 ---
 date: '2025-05-05T10:18:45+10:00'
-draft: false
+draft: true
 title: 'Line-Oriented Hyperdocuments with Subtext'
 tags:
 - haskell
