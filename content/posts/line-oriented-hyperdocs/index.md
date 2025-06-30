@@ -31,11 +31,32 @@ This is a really interesting approach! I've played around and tried to create ne
 
 Subtext is a lot simpler, mostly because it's not the same thing at all. Rather than building out the full system (with stores, servers, and whatnot), Subtext just offers a markup language for a linear hypertext format with very easy parsing based off looking for the magic "sigil" characters.
 
+I can try my hand at building a larger system (with Subtext as its core user-interface/input format) later. For now, let's write enough basic functionality to be able to say I've got some sort of minimum viable product for working with Subtext:
 
+1. A **parser**, so that we can parse Subtext documents into a structured datatype (that we can later work with in interesting ways)
+2. A **deparser**, so that we can serialize that datatype back into text
+3. A **HTML renderer**, since a full native client is going to take a lot of effort and we can whip up a quick and dirty HTML renderer instead, converting a corpus of Subtext documents into a collection of HTML pages we can serve with something like nginx
 
 ## Parsing Subtext
 
-I'll use [attoparsec](https://hackage.haskell.org/package/attoparsec) to build the parsing libraries 
+Subtext looks like this (example taken from [Gordon's guide](https://github.com/subconsciousnetwork/subtext/blob/main/guide.md)):
+
+```subtext
+# Heading
+
+Plain text.
+
+- List item
+- List item
+
+> Quoted text
+
+URLs like https://example.com are automatically linked.
+
+You can also link to local pages using short /slashlinks.
+```
+
+I'll use [attoparsec](https://hackage.haskell.org/package/attoparsec) to build the parsing functionality, since I've used it before and I enjoy working with it.
 
 ## Unparsing Subtext
 
