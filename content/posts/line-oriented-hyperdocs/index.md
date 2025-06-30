@@ -6,7 +6,7 @@ tags:
 - programming
 - haskell
 - hypertext
-publishDate: '2025-07-27'
+publishDate: '2025-07-01'
 series: subtext
 summary: "A parser and HTML renderer for Gordon Brander's Subtext, written in Haskell."
 ---
@@ -45,7 +45,7 @@ I can try my hand at building a larger system (with Subtext as its core user-int
 
 ## Parsing Subtext
 
-I'll take an example snippet of Subtext from [Gordon's guide](https://github.com/subconsciousnetwork/subtext/blob/main/guide.md)):
+I'll take an example snippet of Subtext from [Gordon's guide](https://github.com/subconsciousnetwork/subtext/blob/main/guide.md):
 
 ```subtext
 # Heading
@@ -116,6 +116,16 @@ import qualified Data.Text as T
 import Subtextual.Core
 ```
 
+With that out of the way, we can work on parsing. 
+
+Attoparsec is a parser combinator library, which means we can build up complex parsers out of simple ones. 
+
+Since we want to start looking for URLs (bare HTTP(S) and angle-bracket-delimited) and slashlinks at word boundaries, we'll need to parse in whitespace and non-whitespace characters separately.
+
+So we'll start with those building blocks:
+
+1. `whitespace` to parse spaces and tabs
+2. `word` to parse non-space characters
 
 ```haskell {linenos=inline linenostart=14 title="/src/Subtextual/Parser.hs"}
 ------------------------------------------------------------
@@ -123,21 +133,38 @@ import Subtextual.Core
 ------------------------------------------------------------
 
 whitespace :: Parser T.Text
-whitespace = takeWhile1 isHorizontalSpace
+whitespace = takeWhile1 isHorizontalSpace <?> "whitespace"
 
 word :: Parser T.Text
-word = takeWhile1 $ not . isSpace
+word = takeWhile1 $ not . isSpace <?> "word"
+```
 
+After that we'll want to work on parsing `Inline`s.
+
+`PlainText` should get parsed whenever we have whitespace, or a string of characters that didn't get parsed as a URL or slash-link:
+
+```haskell {linenos=inline linenostart=24 title="/src/Subtextual/Parser.hs"}
 ------------------------------------------------------------
 --                     Inline Parsing                     --
 ------------------------------------------------------------
 
 plainText :: Parser Inline
-plainText = fmap PlainText $ word <|> whitespace
+plainText = PlainText <$> (word <|> whitespace) <?> "plainText"
+```
 
-isUrlChar :: Char -> Bool
-isUrlChar c = not $ c == '>' || isSpace c
+`BareUrl` was an interesting challenge. 
 
+We could just keep parsing characters into a `BareUrl` until we hit whitespace, but there's a problem with that approach---we want to be able to intelligently ignore punctuation like periods, semicolons, or commas at the end of URLs.
+
+If we parse in `Here's a link: https://google.com.`, we want the parsed link to be "https://google.com", with the final punctuation of the sentence being parsed as plaintext.
+
+To solve this issue, we do lookahead on the next bit of the input to see if we've reached the end of the URL, which we define as either:
+
+1. A **punctuation boundary** (a period, semicolon, or comma followed by either whitespace characters or the end of the line)
+2. A **space**, which includes spaces, tabs, and newlines
+3. Or the **end of input**
+
+```haskell {linenos=inline linenostart=31 title="/src/Subtextual/Parser.hs"}
 string' :: String -> Parser T.Text
 string' = string . T.pack
 
@@ -147,6 +174,7 @@ bareUrl = do
     body <- manyTill anyChar $ lookAhead endOfUrl
     let url = schema <> T.pack body
     return $ BareUrl url
+    <?> "bareUrl"
 
     where
         endOfUrl :: Parser ()
@@ -160,7 +188,11 @@ bareUrl = do
             c1 <- char '.' <|> char ';' <|> char ','
             c2 <- skip isSpace <|> endOfLine
             return ()
+```
 
+Parsing `AngledUrl`s is easier, since all we have to do is look for the angle-bracket-delimited text:
+
+```haskell {linenos=inline linenostart=55 title="/src/Subtextual/Parser.hs"}
 isAngledUrlChar :: Char -> Bool
 isAngledUrlChar c = not $ c == '<' || c == '>' || isSpace c
 
@@ -170,7 +202,16 @@ angledUrl = do
     url <- takeWhile1 isAngledUrlChar
     string' ">"
     return $ AngledUrl url
+    <?> "angledUrl"
+```
 
+Slashlinks are also easy since we don't need lookahead---the [spec](https://github.com/subconsciousnetwork/subtext/blob/main/specification.md) tells us that:
+
+> Generally, a slashlink is a / followed by any number of alphanumeric characters, dashes -, underscores _.
+
+And so parsing a slashlink is as easy as looking for the initial forward-slash `/` character and then parsing in any alphanumeric characters, dashes, and slashes.
+
+```haskell {linenos=inline linenostart=66 title="/src/Subtextual/Parser.hs"}
 isSlashLinkChar :: Char -> Bool
 isSlashLinkChar c = 
     isAlpha c 
@@ -184,25 +225,55 @@ slashLink = do
     char '/'
     link <- takeWhile1 isSlashLinkChar
     return $ SlashLink link
+    <?> "slashLink"
+```
 
+Now that we've defined each of the individual `Inline` parsers, we stitch them together into one big `Inline` parser using the Alternative operator `<|>`, which tries each parser in order until it finds the first successful parse.
+
+There's only one gotcha here, which is that `plainText` needs to be the last parser in the list, since it's indiscriminate about what text it'll parse and it'll happily consume the rest of the input until the end of the line. By being careful about the order, we give our more structured (and more discriminating) parsers---`bareUrl`, `angledUrl`, and `slashLink`---the first crack at parsing the text.
+
+```haskell {linenos=inline linenostart=81 title="/src/Subtextual/Parser.hs"}
 inline :: Parser Inline
 inline = 
     bareUrl
     <|> angledUrl
     <|> slashLink
     <|> plainText
+    <?> "inline"
+```
 
+Our `Block`s don't consume `Inline`s, they consume `[Inline]`s, so we need a parser for those too.
+
+Now, we could just lift the parser using `many1`, which takes some parser and runs it at least once (returning a list of values), but there's something that nags at me with that approach---since we're parsing whitespace and non-space characters into separate elements, we'd see a LOT of `Inline`s in each `Block`. 
+
+Every single space between words would have its own `PlainText` entry, which seems excessive.
+
+To fix that, I decided to do some post-processing over the list to `smoosh` together contiguous `PlainText`s into one large `PlainText` by concatenating their text:
+
+```haskell {linenos=inline linenostart=89 title="/src/Subtextual/Parser.hs"}
 inlines :: Parser [Inline]
 inlines = do
     parsed <- many1 inline
     let parsed' = smoosh parsed []
     return parsed'
+    <?> "inlines"
     where
         smoosh :: [Inline] -> [Inline] -> [Inline]
         smoosh [] finished = reverse finished
-        smoosh (PlainText p : todo) (PlainText p' : done) = smoosh todo $ PlainText (p' <> p) : done
+        smoosh (PlainText p : todo) (PlainText p' : done) = 
+            smoosh todo $ PlainText (p' <> p) : done
         smoosh (i : todo) done = smoosh todo (i : done)
+```
 
+With `[Inline]` parsing out of the way, it's time to start parsing `Block`s.
+
+Since Subtext is based off checking magic sigil characters at the start of the line, I created a helper combinator `prefixed` which looks for a given character, skips any spaces, then runs a parser.
+
+The `Block` parsers are fairly self-explanatory. Most of them look for some character at the start of the line before parsing in either a list `[Inline]` or just plain text in the case of `Heading`, since we don't want to search for slashlinks and other URLs in section headers.
+
+The only exception to the "look for a magic sigil char" rule is `paragraph`, which like `plainText` will happily accept any input up until the end of the line, and that means that we again need to be careful about our ordering to leave `paragraph` as the final subparser of `nonBlankBlock`.
+
+```haskell {linenos=inline linenostart=102 title="/src/Subtextual/Parser.hs"}
 ------------------------------------------------------------
 --                      Block Parsing                     --
 ------------------------------------------------------------
@@ -213,7 +284,7 @@ prefixed :: Char -> Parser a -> Parser a
 prefixed c parser = char c *> skipSpace *> parser
 
 takeUntilEndOfLine :: Parser T.Text
-takeUntilEndOfLine = takeWhile1 $ not . isEndOfLine
+takeUntilEndOfLine = takeWhile1 $ not . isEndOfLine <?> "takeUntilEndOfLine"
 
 ----------            Non-Blank Blocks            ----------
 
@@ -239,16 +310,40 @@ nonBlankBlock =
 
 nonBlankBlocks :: Parser Document
 nonBlankBlocks = many1 nonBlankBlock <?> "nonBlankBlocks"
+```
 
+Ahh, but we're not yet parsing blank lines. Why not just add some `blank` parser to `block` (a hypothetical parser to parse any `Block`) that'll look for a newline and spits out a `Blank` element?
+
+Basically, it's a counting problem. If we parse newlines as `blank`s but have our ultimate `document :: Parser Document` consist of looking for multiple pairs of parsed text followed by newlines, we'll get the number of `Blank`s wrong---we'd have to see 3 newline characters before we emitted one `Blank`.
+
+Imagine we have some line like `Line 1\n\nLine 2` that we want to parse with `document`.
+
+1. `Line1` would be parsed in as plain text
+2. The first `\n` would be parsed in as the end of the first line,
+3. The second `\n` would be parsed in as a `Blank`
+
+But now the parser would be expecting a third `\n` to be the end of the second (blank) line, and it's never going to find it, which will cause the whole thing to stop accepting input, causing problems
+
+The fix is to instead count newlines and then emit a list of `Blank`s which is 1 item shorter than the number of newlines, which gets the behaviour we want:
+
+- `\n` gets parsed as an empty list `[]`
+- `\n\n` gets parsed as one blank line `[Blank]`
+- `\n\n\n` gets parsed as two blank lines `[Blank, Blank]`, etc.
+
+```haskell {linenos=inline linenostart=139 title="/src/Subtextual/Parser.hs"}
 ----------              Blank Blocks              ----------
 
 newLines :: Parser Document
 newLines = do
     eols <- many1 (Data.Attoparsec.Text.takeWhile isHorizontalSpace *> endOfLine)
     let count = length eols
-    return (replicate (count - 1) Blank)
+    return $ replicate (count - 1) Blank
     <?> "newLines"
+```
 
+After we figure that complication out, parsing a whole `Document` is pretty easy---we parse many newlines and non-blank blocks at a time, then concatenate them together from a `[Document]` into a `Document`:
+
+```haskell {linenos=inline linenostart=148 title="/src/Subtextual/Parser.hs"}
 ------------------------------------------------------------
 --                    Document Parsing                    --
 ------------------------------------------------------------
@@ -294,7 +389,7 @@ document = T.intercalate (T.pack "\n") . map block
 
 ## Rendering Subtext to HTML
 
-Now that we can unparse `Inline`s, `Block`s and `Document`s back to the original 
+Now that we can unparse `Inline`s, `Block`s and `Document`s back to the original text file, let's work
 
 ```haskell {linenos=inline title="/src/Subtextual/Html.hs"}
 {-# LANGUAGE ExtendedDefaultRules #-}
@@ -358,3 +453,5 @@ document = mconcat . map groupHtml . group' where
 ```
 
 ## Next steps
+
+You can see the latest version of [Subtextual at my GitHub](https://github.com/julianferrone/subtextual).
