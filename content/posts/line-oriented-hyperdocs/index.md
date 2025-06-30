@@ -11,13 +11,9 @@ series: subtext
 summary: "A parser and HTML renderer for Gordon Brander's Subtext, written in Haskell."
 ---
 
-I had a fascinating [conversation with @johnnulls](https://x.com/johnnulls/status/1931397812740301156) recently about adding
+I had a fascinating [conversation with @johnnulls](https://x.com/johnnulls/status/1931409337936969892) recently about extending Subtext to add various affordances for metadata, like key-value pairs and tags.
 
- by creating a extending Subtext:
-
-- Adding metadata to 
-
-But I'm gett
+But I'm getting ahead of myself.
 
 ## What is Subtext?
 
