@@ -39,7 +39,7 @@ Let's write enough basic functionality to be able to say I've got some sort of m
 2. An **unparser**, so that we can serialize that datatype back into text
 3. A **HTML renderer**, since a full native client is going to take a lot of effort and we can whip up a quick and dirty HTML renderer instead, converting a corpus of Subtext documents into a collection of HTML pages we can serve with something like nginx
 
-I'll call this library **Subtextual**.
+I'll call this Haskell library **Subtextual**.
 
 ## Parsing Subtext
 
