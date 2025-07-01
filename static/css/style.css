@@ -84,7 +84,7 @@ body {
     width: 100%;
     display: flex;
     justify-content: space-between;
-    background-color: var(--clr-surface-a20);
+    background-color: var(--clr-surface-a30);
 }
 
 .push {
@@ -106,7 +106,7 @@ body {
 
 .navbar #theme-switch {
     padding: 0.25rem 0.5rem;
-    background-color: var(--clr-surface-a20);
+    background-color: var(--clr-surface-a30);
     border-style: none;
     stroke: var(--clr-font-a0);
     fill: var(--clr-font-a0);
