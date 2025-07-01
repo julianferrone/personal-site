@@ -8,8 +8,7 @@
 
 :root {
     /** Base colors */
-    --clr-dark-a0: #1F1E1C;
-    --clr-light-a0: #fffcf5;
+    --clr-font-a0: #1f1e1c;
 
     /** Theme primary colors */
     --clr-primary-a0: #c90022;
@@ -30,8 +29,7 @@
 
 :root[data-theme="dark"] {
     /** Base colors */
-    --clr-dark-a0: #cecdcb;
-    --clr-light-a0: #1F1E1C;
+    --clr-font-a0: #f5f5f5;
 
     /** Theme primary colors */
     --clr-primary-a0: #82c1ff;
@@ -66,7 +64,7 @@ body {
     font-family: sans-serif;
     line-height: 1.6;
     background-color: var(--clr-surface-a0);
-    color: var(--clr-dark-a0)
+    color: var(--clr-font-a0)
 }
 
 /* This wraps your whole page content */
@@ -86,7 +84,7 @@ body {
     width: 100%;
     display: flex;
     justify-content: space-between;
-    background-color: var(--clr-dark-a0);
+    background-color: var(--clr-surface-a20);
 }
 
 .push {
@@ -97,27 +95,25 @@ body {
     padding: 0.25rem 0.5rem;
     font-weight: bold;
     text-decoration: none;
-    color: var(--clr-surface-a0);
+    
     font-size: x-large;
 }
 
 .navbar a:hover {
     background-color: var(--clr-surface-a0);
-    color: var(--clr-dark-a0);
+    color: var(--clr-font-a0);
 }
 
 .navbar #theme-switch {
     padding: 0.25rem 0.5rem;
-    background-color: var(--clr-dark-a0);
+    background-color: var(--clr-surface-a20);
     border-style: none;
-    stroke: var(--clr-surface-a0);
-    fill: var(--clr-surface-a0);
+    stroke: var(--clr-font-a0);
+    fill: var(--clr-font-a0);
 }
 
 .navbar #theme-switch:hover {
     background-color: var(--clr-surface-a0);
-    stroke: var(--clr-dark-a0);
-    fill: var(--clr-dark-a0);
 }
 
 @media (min-width: 601px) { 
@@ -166,7 +162,7 @@ body {
 **************/
 
 .post-title a {
-    color: var(--clr-dark-a0);
+    color: var(--clr-font-a0);
     font-size: 1.1rem;
     text-decoration: dashed underline;
 }
@@ -197,11 +193,11 @@ body {
     .post-tags a {
         font-size: 0.9em;
         text-decoration: dotted underline;
-        color: var(--clr-dark-a0-subtle)
+        color: var(--clr-font-a0-subtle)
     }
 
     .post-tags a:hover {
-        color: var(--clr-dark-a0)
+        color: var(--clr-font-a0)
     }
 }
 /***********************************************************
@@ -217,7 +213,7 @@ table {
 
 th,
 td {
-    border: 0.15em solid var(--clr-dark-a0);
+    border: 0.15em solid var(--clr-font-a0);
     /* Adds the actual outline */
     padding: 0.5rem;
     text-align: left;
@@ -238,13 +234,13 @@ th {
 
 p.filename {
     font-family: "Berkeley Mono", monospace;
-    color: var(--clr-dark-a0-subtle);
+    color: var(--clr-font-a0-subtle);
     margin: 0;
 }
 
 pre {
     padding: 1rem;
-    background-color: var(--clr-light-a0);
+    background-color: var(--clr-surface-a10);
 }
 
 code {
@@ -315,7 +311,7 @@ blockquote {
 ***********************************************************/
 
 a {
-    color: var(--clr-dark-a0-subtle);
+    color: var(--clr-font-a0-subtle);
 }
 
 a:hover {
