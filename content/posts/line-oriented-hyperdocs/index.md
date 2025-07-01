@@ -1,6 +1,6 @@
 ---
 date: '2025-06-27T16:24:56+10:00'
-draft: true
+draft: false
 title: 'Line Oriented Hyperdocuments in Haskell'
 tags:
 - programming
@@ -11,7 +11,7 @@ series: subtext
 summary: "A parser and HTML renderer for Gordon Brander's Subtext, written in Haskell."
 ---
 
-I had a fascinating [conversation with @johnnulls](https://x.com/johnnulls/status/1931409337936969892) recently about extending Subtext to add various affordances for metadata, like key-value pairs and tags.
+I had a fascinating [conversation with @johnnulls](https://x.com/johnnulls/status/1931409337936969892) recently about creating a lightweight markup format for hyperdocuments, extending Subtext to add various affordances for metadata like key-value pairs and tags.
 
 But I'm getting ahead of myself.
 
@@ -62,15 +62,20 @@ You can also link to local pages using short /slashlinks.
 
 I'll use [attoparsec](https://hackage.haskell.org/package/attoparsec) to build the parsing functionality, since I've used it before and I enjoy working with it.
 
-Since Subtext does some sub-line parsing (HTTP URLs, angle-bracket-delimited URLs, slashlinks, and plain text can all occur within the same line), I'll start with an `Inline` type which will store that sub-line data. 
+Since Subtext does some sub-line parsing, I'll start with an `Inline` type which will store that sub-line data. There's 4 different kinds of text we can see in a line:
+
+1. Plain text
+2. Bare URLs, recognised by the prefix "http://" or "https://"
+3. URLs delimited by angle-brackets
+4. Slashlinks
 
 We then construct `Block`s (which correlate to lines of text in a Subtext file) out of `Inline`s for the more complicated kinds of lines, or `Text` for headings (since we don't want to parse for URLs in headings). 
 
 `Blank`s are our blank lines, which we'll keep in the data-type `Block` since we don't want to throw away that info about the source Subtext files when we're parsing, although we'll probably not do anything with them anyway.
 
-I'll also add `Document` as a type syunonym for lists of `Block`s.
+I'll also add `Document` as a type synonym for lists of `Block`s.
 
-If we translate that into code, it gives us a nice core of data types we can import whenever we need to use them:
+That gives us a nice core of data types:
 
 ```haskell {linenos=inline title="/src/Subtextual/Core.hs"}
 module Subtextual.Core
@@ -116,11 +121,11 @@ import Subtextual.Core
 
 With that out of the way, we can work on parsing. 
 
-Attoparsec is a parser combinator library, which means we can build up complex parsers out of simple ones. 
+Attoparsec is a parser combinator library, which means we build up complex parsers out of simple ones. So let's start with those building blocks.
 
-Since we want to start looking for URLs (bare HTTP(S) and angle-bracket-delimited) and slashlinks at word boundaries, we'll need to parse in whitespace and non-whitespace characters separately.
+Since we want to start looking for URLs and slashlinks at word boundaries, we'll need to parse in whitespace and non-whitespace characters separately. Every time we see a new word, we'll first try to parse it with our more structured parsers for bare URLs, angle-delimited URLs, and slashlinks. If those fail, we'll fall back to parsing them as plain text.
 
-So we'll start with those building blocks:
+So we write the two text parsers:
 
 1. `whitespace` to parse spaces and tabs
 2. `word` to parse non-space characters
@@ -150,13 +155,13 @@ plainText :: Parser Inline
 plainText = PlainText <$> (word <|> whitespace) <?> "plainText"
 ```
 
-> Subtext parsers MUST implement automatic linking for certain URLs that are not in brackets.
+`BareUrl` was an interesting challenge. According to the [spec](https://github.com/subconsciousnetwork/subtext/blob/main/specification.md):
 
-`BareUrl` was an interesting challenge. 
+> Subtext parsers MUST implement automatic linking for certain URLs that are not in brackets.
 
 We could just keep parsing characters into a `BareUrl` until we hit whitespace, but there's a problem with that approach---we want to be able to intelligently ignore punctuation like periods, semicolons, or commas at the end of URLs.
 
-If we parse in `Here's a link: https://google.com.`, we want the parsed link to be "https://google.com", with the final punctuation of the sentence being parsed as plaintext.
+If we parse in e.g. `Here's a link: https://google.com.`, we want the parsed link to be "https://google.com", with the final period being parsed as plaintext.
 
 To solve this issue, we do lookahead on the next bit of the input to see if we've reached the end of the URL, which we define as either:
 
@@ -190,9 +195,9 @@ bareUrl = do
             return ()
 ```
 
-Parsing `AngledUrl`s is easier, since all we have to do is look for the angle-bracket-delimited text.
+Parsing `AngledUrl`s is easier, since all we have to do is look for the [angle-bracket-delimited text](https://github.com/subconsciousnetwork/subtext/blob/main/specification.md).
 
-> URLs are wrapped in angle brackets, and can appear anywhere within a text, link, or quote block:
+> URLs are wrapped in angle brackets, and can appear anywhere within a text, link, or quote block
 
 ```haskell {linenos=inline linenostart=55 title="/src/Subtextual/Parser.hs"}
 isAngledUrlChar :: Char -> Bool
@@ -230,7 +235,7 @@ slashLink = do
     <?> "slashLink"
 ```
 
-Now that we've defined each of the individual `Inline` parsers, we stitch them together into one big `Inline` parser using the Alternative operator `<|>`, which tries each parser in order until it finds the first successful parse.
+Now that we've defined each of the individual `Inline` parsers, we stitch them together into one big `Inline` parser using the Alternative operator `<|>`, which tries each parser in order (backtracking on failure) until it returns the first successful parse.
 
 There's only one gotcha here, which is that `plainText` needs to be the last parser in the list, since it's indiscriminate about what text it'll parse and it'll happily consume the rest of the input until the end of the line. By being careful about the order, we give our more structured (and more discriminating) parsers---`bareUrl`, `angledUrl`, and `slashLink`---the first crack at parsing the text.
 
@@ -244,11 +249,9 @@ inline =
     <?> "inline"
 ```
 
-Our `Block`s don't consume `Inline`s, they consume `[Inline]`s, so we need a parser for those too.
+Of course, our `Block`s don't consume `Inline`s, they consume `[Inline]`s, so we need a parser for those too.
 
-Now, we could just lift the parser using `many1`, which takes some parser and runs it at least once (returning a list of values), but there's something that nags at me with that approach---since we're parsing whitespace and non-space characters into separate elements, we'd see a LOT of `Inline`s in each `Block`. 
-
-Every single space between words would have its own `PlainText` entry, which seems excessive.
+Now, we could just lift the parser using `many1`, which takes some parser and runs it at least once (returning a list of values), but there's something that nags at me with that approach---since we're parsing whitespace and non-space characters into separate elements, every single space between words would have its own `PlainText` entry in the `Block`, which seems excessive.
 
 To fix that, I decided to do some post-processing over the list to `smoosh` together contiguous `PlainText`s into one large `PlainText` by concatenating their text:
 
@@ -271,7 +274,7 @@ With `[Inline]` parsing out of the way, it's time to start parsing `Block`s.
 
 Since Subtext is based off checking magic sigil characters at the start of the line, I created a helper combinator `prefixed` which looks for a given character, skips any spaces, then runs a parser.
 
-The `Block` parsers are fairly self-explanatory. Most of them look for some character at the start of the line before parsing in either a list `[Inline]` or just plain text in the case of `Heading`, since we don't want to search for slashlinks and other URLs in section headers.
+The `Block` parsers are fairly self-explanatory. Most of them look for some character at the start of the line before parsing in either a list `[Inline]` or plain `Text` in the case of `Heading` since we don't want to search for slashlinks and other URLs in section headers.
 
 The only exception to the "look for a magic sigil char" rule is `paragraph`, which like `plainText` will happily accept any input up until the end of the line, and that means that we again need to be careful about our ordering to leave `paragraph` as the final subparser of `nonBlankBlock`.
 
@@ -342,6 +345,8 @@ newLines = do
     return $ replicate (count - 1) Blank
     <?> "newLines"
 ```
+
+This is also why we wrote the parser `nonBlankBlocks`---with two parsers `Parser Document` that parse lists of blocks, we can combine the two parsers into a single `document` parser.
 
 After we figure that complication out, parsing a whole `Document` is pretty easy---we parse many newlines and non-blank blocks at a time, then concatenate them together from a `[Document]` into a `Document`:
 
@@ -438,7 +443,9 @@ Since `Document` is really just a `[Block]`, surely we can just `map block` over
 
 Unfortunately, it's not so easy.
 
-HTML requires that we wrap our lists of `Bullet`s into a list element---either ordered `ol` or unordered `ul`. 
+HTML requires that we wrap our lists of `Bullet`s into a list element---either ordered `ol` or unordered `ul`, while if we were to just `map block`, we'd have list items adjacent to paragraphs, like:
+
+<p>This is a plain text paragraph.</p><li>This is a bullet.</li>`.
 
 To achieve this, I'll first pre-process the `Document` to group up adjacent `Bullet`s into a single list, then wrap those lists with a `ul` element when we output HTML:
 
@@ -475,6 +482,4 @@ document = mconcat . map groupHtml . group' where
 
 That wraps up my alpha version of Subtextual!
 
-I won't analyse the code here, but all the above functionality is also supported by a small battery of unit tests.
-
-You can see the [latest version of Subtextual at my GitHub](https://github.com/julianferrone/subtextual).
+All the above functionality is also supported by a small battery of unit tests, and you can see the [latest version of Subtextual at my GitHub](https://github.com/julianferrone/subtextual).
