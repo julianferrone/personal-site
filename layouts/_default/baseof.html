@@ -10,7 +10,7 @@
     <link rel="manifest" href="/site.webmanifest">
     <link rel="icon" href="/favicon.ico" sizes="32x32">
     <title>Julian Ferrone - {{ .Title }}</title>
-    <meta charset="utf-8" /> 
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     {{ partial "opengraph.html" . }}
 </head>
@@ -27,11 +27,26 @@
             </svg>
         </button>
     </nav>
-    <div class="container">
+    <div id="container">
         <h1> {{ .Title }} </h1>
         {{ block "main" . }}
         {{ end }}
     </div>
+    <footer>
+        <div>Socials:</div>
+        <a href="https://github.com/julianferrone/">
+            <img src="img/github.svg" id="github" width="24" height="24">
+            GitHub
+        </a>
+        <a href="https://x.com/julian_ferrone/">
+            <img src="img/twitter_x.svg" id="twitter" width="24" height="24">
+            X / Twitter
+        </a>
+        <a href="https://www.instagram.com/julianferrone/">
+            <img src="img/instagram.svg" id="instagram" width="24" height="24">
+            Instagram
+        </a>
+    </footer>
 </body>
 
 </html>

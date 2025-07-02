@@ -60,8 +60,6 @@ html {
     scroll-padding-top: 4em;
 }
 
-
-
 body {
     height: calc(100% - var(--navbar-height));
     margin: 0;
@@ -148,8 +146,9 @@ footer {
     height: 5rem;
     flex-shrink: 0;
     background-color: var(--clr-surface-a30);
+    display: flex;
+    flex-direction: row;
 }
-
 
 /***********************************************************
 ********************** Post Summaries **********************
