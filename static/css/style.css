@@ -143,11 +143,32 @@ button:hover {
 
 footer {
     width: 100%;
-    height: 5rem;
     flex-shrink: 0;
     background-color: var(--clr-surface-a30);
     display: flex;
     flex-direction: row;
+    align-items: center;
+    justify-content: end;
+}
+
+footer div, footer a {
+    padding: 1rem 0.5rem;
+    font-weight: bold;
+    text-decoration: none;
+    font-size: medium;
+    display: inline;
+    vertical-align: middle;
+    display: flex;
+    align-items: center;
+}
+
+footer a:hover {
+    background-color: var(--clr-surface-a0);
+    color: var(--clr-font-a0);
+}
+
+footer img {
+    margin: 0rem 0.5rem;
 }
 
 /***********************************************************
