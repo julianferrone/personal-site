@@ -10,3 +10,9 @@ publishDate: '2025-07-27'
 series: subtext
 summary: "Extending Gordon Brander's Subtext with metadata and transclusion."
 ---
+
+Tags explanation
+
+Triples explanation
+
+Transclusion explanation
