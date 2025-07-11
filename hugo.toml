@@ -15,3 +15,7 @@ taxonomy = []      # disables /tags/foo/ etc.
 [markup]
   [markup.highlight]
     noclasses = false
+
+[permalinks]
+  [permalinks.page]
+    posts = "/:slug"
