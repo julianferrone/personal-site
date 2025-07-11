@@ -21,8 +21,8 @@
         <a class="push" href="/posts/">Posts</a>
         <a href="/tags/">Tags</a>
         <a href="/about">About</a>
-        <button id="theme-switch" aria-label="Toggle Theme">
-            <svg id="theme-icon" width="24" height="24">
+        <button class="responsive-svg" id="theme-switch" aria-label="Toggle Theme">
+            <svg width="24" height="24">
                 <use id="theme-icon-use" href="/img/icons.svg#sun" />
             </svg>
         </button>
@@ -35,15 +35,23 @@
     <footer>
         <div>Socials:</div>
         <a href="https://github.com/julianferrone/">
-            <img src="/img/github.svg" id="github" width="24" height="24">
+            {{/*  <img src="/img/github.svg" id="github" width="24" height="24">  */}}
+            <svg class="responsive-svg" width="24" height="24">
+                <use href="/img/icons.svg#github" />
+            </svg>
             GitHub
         </a>
         <a href="https://x.com/julian_ferrone/">
-            <img src="/img/twitter_x.svg" id="twitter" width="24" height="24">
+            {{/*  <img src="/img/twitter_x.svg" id="twitter" width="24" height="24">  */}}
+            <svg class="responsive-svg" width="24" height="24">
+                <use href="/img/icons.svg#twitter_x" />
+            </svg>
             X / Twitter
         </a>
         <a href="https://www.instagram.com/julianferrone/">
-            <img src="/img/instagram.svg" id="instagram" width="24" height="24">
+            <svg class="responsive-svg" width="24" height="24">
+                <use href="/img/icons.svg#instagram" />
+            </svg>
             Instagram
         </a>
     </footer>

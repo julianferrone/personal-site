@@ -81,6 +81,11 @@ body {
     padding: 1rem;
 }
 
+.responsive-svg {
+    padding: 0.25rem 0.5rem;
+    fill: var(--clr-font-a0);
+}
+
 /***********************************************************
 ********************** Navigation Bar **********************
 ***********************************************************/
@@ -111,11 +116,10 @@ body {
 }
 
 .navbar #theme-switch {
-    padding: 0.25rem 0.5rem;
+    /* padding: 0.25rem 0.5rem; */
     background-color: var(--clr-surface-a30);
     border-style: none;
     stroke: var(--clr-font-a0);
-    fill: var(--clr-font-a0);
 }
 
 .navbar #theme-switch:hover {
@@ -151,7 +155,8 @@ footer {
     justify-content: end;
 }
 
-footer div, footer a {
+footer div,
+footer a {
     padding: 0.5rem 0.25rem;
     font-weight: bold;
     text-decoration: none;
@@ -172,7 +177,9 @@ footer img {
 }
 
 @media (min-width: 601px) {
-    footer div, footer a {
+
+    footer div,
+    footer a {
         padding: 1rem 0.5rem;
     }
 
