@@ -9,6 +9,8 @@ tags:
 publishDate: '2025-07-01'
 series: subtext
 summary: "A parser and HTML renderer for Gordon Brander's Subtext, written in Haskell."
+aliases: 
+- "posts/line-oriented-hyperdocs/"
 ---
 
 I had a fascinating [conversation with @johnnulls](https://x.com/johnnulls/status/1931409337936969892) recently about creating a lightweight markup format for hyperdocuments, extending Subtext to add various affordances for metadata like key-value pairs and tags.
