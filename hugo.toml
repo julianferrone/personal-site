@@ -18,4 +18,4 @@ taxonomy = []      # disables /tags/foo/ etc.
 
 [permalinks]
   [permalinks.page]
-    posts = "/:slug"
+    posts = "/:contentbasename"
