@@ -11,19 +11,25 @@ series: subtext
 summary: "I extend Gordon Brander's Subtext with markup for metadata (tags, key-value pairs, and triples) and transclusion."
 ---
 
-Gordon Brander's Subtext is a pretty simple markup format for hyperdocuments. There's no  presentation markup (i.e., something like CSS.) There's no programming markup to add reactivity (like JavaScript.) There's only a focused markup for semantics that includes:
+Gordon Brander's Subtext is a pretty simple markup format for hyperdocuments. 
+
+There's no presentation markup to make documents look nice (i.e. there's no CSS analogue). 
+
+There's no programming markup to add reactivity (no JavaScript analogue).
+
+There's only a focused markup for semantics that includes:
 
 - 4 kinds of sub-line-level semantic chunks (the `Inline` data type in Subtextual):
-    1. Plain text
-    2. Bare URLs (which Subtextual currently only recognises if they use the HTTP(S) scheme) to external resources
-    3. Angle-bracket-delimited URLs to external resources
-    4. Slashlinks to other Subtext documents
+    1. **Plain text**
+    2. **Bare URLs** (which Subtextual currently only recognises if they use the HTTP(S) scheme) to external resources
+    3. **Angle-bracket-delimited URLs** to external resources
+    4. **Slashlinks** to other Subtext documents
 - 5 kinds of line-level semantic chunks (the `Block` data type in Subtextual):
-    1. Regular paragraphs
-    2. Headings
-    3. Bullet points
-    4. Quotes
-    5. Blank lines
+    1. **Regular paragraphs**
+    2. **Headings**
+    3. **Bullet points**
+    4. **Quotes**
+    5. **Blank lines**
 
 So of course, I decided to ruin that beautiful simplicity by adding a bunch more specifications for line-level semantics---as well as adding parsing for those primitives in my Haskell library [Subtextual](https://github.com/julianferrone/subtextual)---to encode metadata and transclusion.
 
@@ -31,13 +37,15 @@ So of course, I decided to ruin that beautiful simplicity by adding a bunch more
 
 Why add metadata to Subtext?
 
-It's because Subtext documents are designed to be human-readable---and *only* human-readable. 
+Subtext documents are designed to be human-readable---and *only* human-readable. 
 
 There's no affordances for machines to read them.
 
 Metadata fixes that by encoding semantic information that symbolic AI (aka [GOFAI](https://en.wikipedia.org/wiki/GOFAI)) can process.
 
-Sure, you could query them with things like LLMs or search across a collection of them using something like a [term frequency-inverse document frequency search](https://en.wikipedia.org/wiki/Tf–idf) (since they're just text documents at the end of the day), but I'd prefer to add something that a proper reasoner (say, written in Prolog) could work with.
+Sure, you could query them with things like LLMs, or search across a collection of them using something like a [term frequency-inverse document frequency search](https://en.wikipedia.org/wiki/Tf–idf) (since they're just text documents at the end of the day), but I'd prefer to add something that a proper reasoner could work with.
+
+You never know. Maybe I'll decide to learn Prolog and I'll write a little reasoner over Subtext documents in it.
 
 I chose to add three kinds of metadata:
 
@@ -47,22 +55,22 @@ I chose to add three kinds of metadata:
 
 These are unary, binary, and ternary `Block` constructors, respectively.
 
-Each provides progressively more power in terms of what they can express.
-
 A tag attaches a **keyword** to a Subtext document, which we can interpret as a category that the document belongs to.
 
 Key-value pairs attach a name (the **key**) to a blob of data (the **value**).
 
 Triples enhance key-value pairs by adding a relationship (the **predicate**) between the key (now called the **subject**) and the value (aka the **object**).
 
+If you squint a little, you can see a sort-of-mapping between the different metadata types, where we keep progressively adding more expressivity:
+
 ```goat
-                          +-----------+
-                          | Keyword   | Tag
-+-----------+             +-----------+
-| Key       |             | Value     | Key-value pairs
-+-----------+-------------+-----------+
-| Subject   | Predicate   | Object    | Triples
-+-----------+-------------+-----------+
+                                +-----------+                      
+                                | Keyword   | Tag                  
+      +-----------+             +-----------+                      
+      | Key       |             | Value     | Key-value pairs      
+      +-----------+-------------+-----------+                      
+      | Subject   | Predicate   | Object    | Triples              
+      +-----------+-------------+-----------+                      
 ```
 
 ### Tags
@@ -282,6 +290,229 @@ Adding metadata support to Subtextual was pretty easy, so I didn't go into much 
 
 On the other hand, transclusion was a lot more difficult---nearly doubling the size of my codebase---so I'm going to get a bit more into the weeds and discuss how I did it.
 
-### Corpus
+### Enhancing Blocks with Authored and Resolved wrappers
+
+After adding the metadata types to my Content, I had the following variants for a `Block`, which denotes some line-level piece of content:
+
+```haskell
+data Block
+  = Paragraph [Inline]
+  | Heading Text.Text
+  | Bullet [Inline]
+  | Quote [Inline]
+  | Tag Text.Text
+  | KeyValue Text.Text Text.Text
+  | Triple Text.Text Text.Text Text.Text
+  | Blank
+  deriving (Show, Eq)
+```
+
+I wanted to be able to statically differentiate transclusion references from raw content that didn't need to be resolved before presenting it to a viewer.
+
+So, rather than further extending `Block` with extra data constructors, I added a new data type for transclusion references, including the different options for how we want to select the content:
+
+```haskell
+data Transclusion
+  = Transclusion DocumentName TransclusionOptions
+  deriving (Show, Eq)
+
+data TransclusionOptions
+  = WholeDocument
+  | FirstLines Int
+  | Lines Int Int
+  | HeadingSection Text.Text
+  deriving (Show, Eq)
+```
+
+And then, to distinguish between what an author has written and what a user can read, I added `Authored` and `Resolved`:
+
+```haskell
+data Authored
+  = Raw Block
+  | ToResolve Transclusion
+  deriving (Show, Eq)
+
+data Resolved
+  = Present Block
+  | ResourceNotFound DocumentName
+  | HeadingNotFound DocumentName Text.Text
+  deriving (Show, Eq)
+```
+
+So now, instead of parsing text documents into lists of blocks `[Block]`, I parse them into lists of authored blocks `[Authored]`.
+
+But it's not enough to just parse in `Authored` documents, I want to be able to resolve transclusion references and insert content before serving it to the user, which is what the `Resolved` type is for.
+
+When we resolve a transclusion, we get one of the following outcomes:
+
+1. A list of present blocks `[Present]` which says that the engine was able to resolve the transclusion reference, locate the content, and provide it
+2. An error message `ResourceNotFound`, which says the document for the provided document name couldn't be found
+3. An error message `HeadingNotFound` which says the document could be found, but the provided header couldn't be found
+
+### Collating a list of Documents into a Corpus
+
+Now that we've got transclusion, it's not enough to work with one Subtext document at a time.
+
+We need to be able to work with collections of documents, which means we need a new data type.
+
+I needed a name, and the [Merriam Webster entry for "corpus"](https://www.merriam-webster.com/dictionary/corpus) provides us one:
+
+> **3a:** all the writings or works of a particular kind or on a particular subject 
+>
+> *especially*: the complete works of an author
+
+So I added `Corpus` to be that data type:
+
+```haskell
+newtype Corpus a = Corpus {
+  unCorpus :: Map.Map Core.DocumentName [a]
+} deriving (Eq, Ord, Show)
+```
+
+From a [denotational semantics standpoint](https://reasonablypolymorphic.com/blog/follow-the-denotation/), you can think of the meaning of `Corpus` as being a lookup function `DocumentName -> [a]`: mapping document names to their content (where `a` refers to some kind of Subtext block).
 
 ### Topologically sorting the references graph
+
+Ultimately what we're looking for is some function that takes a corpus of written documents, then returns a corpus of documents where all the transclusion references have been resolved.
+
+Spiritually, the type signature of that function would look like this: `resolveCorpus :: Corpus Authored -> Corpus Resolved`.
+
+So the ultimate dataflow of the parsing, unparsing, and transclusion resolution looks like this:
+
+```goat
+             ┌───────────────────────────┐              
+             │ Directory                 │              
+             │                           │              
+             │ ┌───────────────────────┐ │              
+           ┌─┼─┤ Subtext File .subtext ◄─┼─┐            
+           │ │ └───────────────────────┘ │ │            
+           │ └───────────────────────────┘ │            
+           ▼                               │            
+        Parsing                        Unparsing        
+           │                               ▲            
+           │   ┌───────────────────────┐   │            
+           │   │ Corpus Authored       │   │            
+           │   │                       │   │            
+           │   │ ┌───────────────────┐ │   │            
+           └───┼─► Document Authored ├─┼───┘            
+               │ └───────────────────┘ │                
+               └─────────────┬─────────┘                
+                             │                           
+                             ▼                          
+                 Resolving References                      
+                         ▲   │                          
+                         │   │                          
+               ┌─────────┴───▼─────────┐                
+               │ Corpus Resolved       │                
+               │                       │                
+               │ ┌───────────────────┐ │                
+               │ │ Document Resolved │ │                
+               │ └───────────────────┘ │                
+               └───────────────────────┘                
+```
+
+Ahh, but I've added a data dependency of resolving references on the `Corpus Resolved`! 
+
+Why?
+
+Well, it's for efficiency.
+
+Imagine we have some nested transclusion references---document A transcludes document B, document B transcludes document C, document C transcludes document D, and so on.
+
+We don't want to re-process document B, C, D, ..., when we process document A---we've already done the work, why duplicate it?
+
+We should use the `Document Resolved` of D to resolve the `Document Authored` version of C into a `Document Resolved`, then use the `Document Resolved` version of C to resolve B from `Document Authored` into a `Document Resolved`, and so on, until we've finished processing the whole chain of documents.
+
+Now we need to work out what order to do the transclusion resolution in.
+
+Wikipedia tells us we need to do a [topological sort](https://en.wikipedia.org/wiki/Topological_sorting) on the graph of transclusion references:
+
+> In computer science, a **topological sort** or **topological ordering** of a directed graph is a linear ordering of its vertices such that for every directed edge *(u,v)* from vertex *u* to vertex *v*, *u* comes before *v* in the ordering
+
+But thankfully, I didn't need to implement this. The containers package already has [exactly what I need](https://hackage-content.haskell.org/package/containers-0.8/docs/Data-Graph.html#t:Graph):
+
+> `topSort :: Graph -> [Vertex]`
+> 
+> **O(V + E)**. A topological sort of the graph. The order is partially specified by the condition that a vertex i precedes j whenever j is reachable from i but not vice versa.
+>
+> Note: A topological sort exists only when there are no cycles in the graph. If the graph has cycles, the output of this function will not be a topological sort. In such a case consider using scc.
+
+That last note is important. It means we first need to check if there's any cycles in our graph before we sort it.
+
+But we should've been doing this anyways.
+
+Because if there's cycles in our graph, that means there's mutual transclusion references, which means that the resolved documents could be infinitely large!
+
+I.e. take two documents, *foo.subtext* and *bar.subtext*:
+
+```haskell
+# Foo
+
+$ bar
+```
+
+```haskell
+# Bar
+
+$ foo
+```
+
+Then resolving the transclusion for either document would result in an infinitely large document:
+
+```haskell
+# Foo
+
+# Bar
+
+# Foo
+
+# Bar
+
+# Foo
+...
+```
+
+So when we sort our graph of transclusion references, we need to bubble up an error `GraphContainsCycles` (which tells us the list of cycles) if there's any cycles. 
+
+Otherwise, we can return the [directed acyclic graph (DAG)](https://en.wikipedia.org/wiki/Directed_acyclic_graph) of transclusion references as a topologically-sorted list:
+
+```haskell
+newtype GraphContainsCycles a = GraphContainsCycles [Graph.Tree a] deriving (Eq, Ord, Show)
+
+sortDag ::
+  Graph.Graph -> -- Graph to check cycles for
+  (Graph.Vertex -> a) -> -- Lookup vertex names for easier reporting
+  Either
+    (GraphContainsCycles a) -- Graph has cycles
+    [Graph.Vertex] -- topologically sorted list of vertices
+sortDag g nameLookup = case cycles g of
+  [] -> Right . Graph.topSort $ g
+  cycles' -> Left . GraphContainsCycles . fmap (fmap nameLookup) $ cycles'
+```
+
+Then, once we've got the list, resolving the corpus is as simple as performing a right fold over the list of names:
+
+```haskell
+addToCorpus :: Corpus Core.Authored -> [Core.DocumentName] -> Corpus Core.Resolved -> Corpus Core.Resolved
+addToCorpus auths names resolveds =
+  foldr
+    (updateResolvedCorpus auths)
+    resolveds
+    names
+  where
+    updateResolvedCorpus ::
+      Corpus Core.Authored ->
+      Core.DocumentName ->
+      Corpus Core.Resolved ->
+      Corpus Core.Resolved
+    updateResolvedCorpus auths name resolveds =
+      insertDoc
+        (resolveFromCorpuses auths name resolveds)
+        resolveds
+```
+
+## Next steps
+
+That's a wrap!
+
+As always, I've got unit tests written for all this behaviour, and you can see the [latest version of Subtextual at my GitHub](https://github.com/julianferrone/subtextual).
