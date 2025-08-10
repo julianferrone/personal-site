@@ -1,6 +1,6 @@
 ---
 date: '2025-06-27T16:34:42+10:00'
-draft: true
+draft: false
 title: 'Adding Tags, Triples, and Transclusion to Subtextual'
 tags:
 - programming
