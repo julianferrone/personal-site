@@ -64,13 +64,13 @@ Triples enhance key-value pairs by adding a relationship (the **predicate**) bet
 If you squint a little, you can see a sort-of-mapping between the different metadata types, where we keep progressively adding more expressivity:
 
 ```goat
-                                +-----------+                      
+                                .-----------.                      
                                 | Keyword   | Tag                  
-      +-----------+             +-----------+                      
+      .-----------.             +-----------+                      
       | Key       |             | Value     | Key-value pairs      
       +-----------+-------------+-----------+                      
       | Subject   | Predicate   | Object    | Triples              
-      +-----------+-------------+-----------+                      
+      .-----------+-------------+-----------.                      
 ```
 
 ### Tags
@@ -91,6 +91,8 @@ These provide the same functionality as hashtags in most web apps, like X / Twit
 
 If you *really* wanted to draw a parallel with "hashtag", I suppose you could call them "bangtags" (given the slang term "bang" for the exclamation point) instead.
 
+But I think that sounds horrible, so I won't.
+
 ### Key-value pairs
 
 **Key-value pairs** let us attach names (the **key**) to data (the **value**) in our documents.
@@ -105,7 +107,7 @@ I think this is a good tradeoff, since tags are typically only one-word (that is
 
 Unfortunately, that means that keys can't contain whitespace, but the alternative was to use a secondary sigil character in the middle of the line. 
 
-In another world where we used a separate sigil character (let's use `%` since there's two dots to represent the 1. key, 2. value) to denote key-value pairs, with a secondary sigil character (let's use `^` as an upside-down "v" for "value") to delimit keys from values, we'd have something like:
+In another world where we used a separate sigil character (let's use `%` since there's two dots to represent the two components of key and value) to denote key-value pairs, with a secondary sigil character (let's use `^` as an upside-down "v" for "value") to delimit keys from values, we'd have something like:
 
 ```subtext-extended
 % key^value
@@ -121,7 +123,7 @@ Syntactically, tag blocks are a sequence of:
 - A nonzero amount of whitespace (the delimiting whitespace)
 - A nonzero amount of any characters to represent the **value**
 
-Even though keys can't contain whitespace, values can contain as much as we'd like!
+So, even though keys can't contain whitespace, values can contain as much whitespace (horizontal only---tabs and spaces) as we'd like!
 
 This is how key-value pairs look in Subtext Extended:
 
@@ -136,7 +138,9 @@ The final metadata component, **triples**, let us upgrade key-value pairs by enc
 
 These are basically a port of [RDF's semantic triples](https://en.wikipedia.org/wiki/Semantic_triple).
 
-Triple blocks start with `&`. The three parts of a triple---subject, predicate, and object---are delimited by spaces. 
+Triple blocks start with `&`. 
+
+The three parts of a triple---subject, predicate, and object---are delimited by spaces. 
 
 Similarly to key-value pairs, that means that the subject and predicate can't contain spaces, while the object can.
 
@@ -178,25 +182,23 @@ Let me briefly direct you to a relevant excerpt from the [Structure and Interpre
 
 Subtext isn't a programming language by any means.
 
-But it's still a tool for thought and it's got: 
+But it's still a tool for thought, and it's got those three mechanisms:
 
 1. **Primitive expressions**: the sub-line-level and line-level block semantics,
 2. **A combinator**: concatenation of blocks,
-3.  **An abstractor**: attaching a name to a list of Subtext blocks produces a document, which we can reference in other blocks using *slashlinks*.
-
-Adding metadata added new primitive expressions.
+3.  **An abstractor**: attaching a name to a list of Subtext blocks produces a Document, which we can reference in other blocks using *slashlinks*.Adding metadata added new primitive expressions.
 
 Adding transclusion adds a new abstractor.
 
-While slashlinks merely reference a document---meaning the user has to navigate to the document themselves---transclusion lets us document content within a document before it's presented to the user.
+While slashlinks merely reference a document---meaning the user has to navigate to the document themselves to read it---transclusion lets us include content from another document before it's presented to the user.
 
-That lets us [reuse and remix](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself) between our Subtext Extended documents.
+That lets us [reuse and remix](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself) content in our Subtext Extended documents.
 
 ### Transclusion syntax
 
 Transclusion blocks start with a `$`, and denote that the content from another document must be fetched and inserted into the location of (and replacing) the block.
 
-Transclusion blocks refer only to local Subtext Extended pages (whose names are akin to slashlinks).
+Transclusion blocks refer only to local Subtext Extended pages (whose names are the same as slashlinks---the only characters allowed are alphanumerics, forward slashes, dashes, and underscores).
 
 There are 4 options to select what content to refer to in a document:
 
@@ -286,9 +288,11 @@ For each age is a dream that is dying,
 Or one that is coming to birth.
 ```
 
-Adding metadata support to Subtextual was pretty easy, so I didn't go into much detail with how I implemented it.
+That's the different transclusion option examples done.
 
-On the other hand, transclusion was a lot more difficult---nearly doubling the size of my codebase---so I'm going to get a bit more into the weeds and discuss how I did it.
+Adding metadata support to Subtextual was pretty easy, so I won't go into any detail about how I implemented it.
+
+But transclusion was a lot more difficult---supporting transclusion nearly doubled the size of the Subtextual codebase---so I'm going to get a bit more into the weeds and discuss how I did it.
 
 ### Enhancing Blocks with Authored and Resolved wrappers
 
@@ -339,11 +343,27 @@ data Resolved
   deriving (Show, Eq)
 ```
 
-So now, instead of parsing text documents into lists of blocks `[Block]`, I parse them into lists of authored blocks `[Authored]`.
+`Authored` and `Resolved` are a pair of overlapping sets, so I visualise them as a Venn diagram:
 
-But it's not enough to just parse in `Authored` documents, I want to be able to resolve transclusion references and insert content before serving it to the user, which is what the `Resolved` type is for.
+```goat
+        Authored                                             
+         .-----------------------.           Resolved        
+        |                .--------+----------------.         
+        | Transclusion  |         |                 |        
+        | references    |  Block  |   Transclusion  |        
+        |               |         |     resolution  |        
+         '--------------+--------'          errors  |        
+                        |                           |        
+                         '-------------------------'         
+```
 
-When we resolve a transclusion, we get one of the following outcomes:
+Now, instead of parsing text documents into lists of blocks `[Block]`, I parse them into lists of authored blocks `[Authored]`.
+
+But it's not enough to just parse in `Authored` documents.
+
+I want to be able to resolve transclusion references and insert content before serving it to the user, which is what the `Resolved` type is for.
+
+When we resolve a transclusion reference, we get one of the following outcomes:
 
 1. A list of present blocks `[Present]` which says that the engine was able to resolve the transclusion reference, locate the content, and provide it
 2. An error message `ResourceNotFound`, which says the document for the provided document name couldn't be found
@@ -351,17 +371,17 @@ When we resolve a transclusion, we get one of the following outcomes:
 
 ### Collating a list of Documents into a Corpus
 
-Now that we've got transclusion, it's not enough to work with one Subtext document at a time.
+Now that we've got the basic types to support transclusion, it's not enough to work with one Subtext document at a time.
 
-We need to be able to work with collections of documents, which means we need a new data type.
+We need to be able to work with collections of documents---since we need to be able to find the transclusion-referenced document---which means we need a new data type.
 
-I needed a name, and the [Merriam Webster entry for "corpus"](https://www.merriam-webster.com/dictionary/corpus) provides us one:
+The [Merriam Webster entry for "corpus"](https://www.merriam-webster.com/dictionary/corpus) provides a name for this type:
 
 > **3a:** all the writings or works of a particular kind or on a particular subject 
 >
 > *especially*: the complete works of an author
 
-So I added `Corpus` to be that data type:
+And so I added `Corpus` to store collections of documents:
 
 ```haskell
 newtype Corpus a = Corpus {
@@ -373,7 +393,7 @@ From a [denotational semantics standpoint](https://reasonablypolymorphic.com/blo
 
 ### Topologically sorting the references graph
 
-Ultimately what we're looking for is some function that takes a corpus of written documents, then returns a corpus of documents where all the transclusion references have been resolved.
+Ultimately what we're looking for is some function that takes a collection of written documents, then returns a collection of documents where all the transclusion references have been resolved.
 
 Spiritually, the type signature of that function would look like this: `resolveCorpus :: Corpus Authored -> Corpus Resolved`.
 
