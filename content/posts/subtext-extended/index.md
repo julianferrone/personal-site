@@ -420,9 +420,9 @@ So the ultimate dataflow of the parsing, unparsing, and transclusion resolution 
                              │                           
                              ▼                          
                  Resolving References                      
-                         ▲   │                          
-                         │   │                          
-               ┌─────────┴───▼─────────┐                
+                       ▲     │                          
+                       │     │                          
+               ┌───────┴─────▼─────────┐                
                │ Corpus Resolved       │                
                │                       │                
                │ ┌───────────────────┐ │                
@@ -439,13 +439,17 @@ Well, it's for efficiency.
 
 Imagine we have some nested transclusion references---document A transcludes document B, document B transcludes document C, document C transcludes document D, and so on.
 
-We don't want to re-process document B, C, D, ..., when we process document A---we've already done the work, why duplicate it?
+We don't want to re-process document B, C, D, ..., when we process document A---we've already done the work, why repeat ourselves?
 
-We should use the `Document Resolved` of D to resolve the `Document Authored` version of C into a `Document Resolved`, then use the `Document Resolved` version of C to resolve B from `Document Authored` into a `Document Resolved`, and so on, until we've finished processing the whole chain of documents.
+Instead, we should:
 
-Now we need to work out what order to do the transclusion resolution in.
+- Use the `Document Resolved` of D to resolve the `Document Authored` version of C into a `Document Resolved`,
+- Then use the `Document Resolved` version of C to resolve B from a `Document Authored` into a `Document Resolved`,
+- And continue until we've finished processing the whole chain of documents.
 
-Wikipedia tells us we need to do a [topological sort](https://en.wikipedia.org/wiki/Topological_sorting) on the graph of transclusion references:
+That means we need to work out what order to do the transclusion resolution in.
+
+A quick Wikipedia search will tell us that we're looking for a [topological sort](https://en.wikipedia.org/wiki/Topological_sorting) on the graph of transclusion references:
 
 > In computer science, a **topological sort** or **topological ordering** of a directed graph is a linear ordering of its vertices such that for every directed edge *(u,v)* from vertex *u* to vertex *v*, *u* comes before *v* in the ordering
 
@@ -461,9 +465,11 @@ That last note is important. It means we first need to check if there's any cycl
 
 But we should've been doing this anyways.
 
-Because if there's cycles in our graph, that means there's mutual transclusion references, which means that the resolved documents could be infinitely large!
+If there's cycles in our graph, that means there's mutual transclusion references.
 
-I.e. take two documents, *foo.subtext* and *bar.subtext*:
+Mutual transclusion references means that the resolved documents could be infinitely large!
+
+For a quick example, take two Subtext Extended documents, *foo.subtext* and *bar.subtext*:
 
 ```haskell
 # Foo
@@ -492,9 +498,9 @@ Then resolving the transclusion for either document would result in an infinitel
 ...
 ```
 
-So when we sort our graph of transclusion references, we need to bubble up an error `GraphContainsCycles` (which tells us the list of cycles) if there's any cycles. 
+So when we sort our graph of transclusion references, we need to bubble up an error if there's any cycles, which I do with `GraphContainsCycles` (returning a list of the cycles in the transclusion references graph).
 
-Otherwise, we can return the [directed acyclic graph (DAG)](https://en.wikipedia.org/wiki/Directed_acyclic_graph) of transclusion references as a topologically-sorted list:
+Otherwise, we can return the [directed acyclic graph (DAG)](https://en.wikipedia.org/wiki/Directed_acyclic_graph) of transclusion references as a topologically-sorted list.
 
 ```haskell
 newtype GraphContainsCycles a = GraphContainsCycles [Graph.Tree a] deriving (Eq, Ord, Show)
@@ -510,7 +516,7 @@ sortDag g nameLookup = case cycles g of
   cycles' -> Left . GraphContainsCycles . fmap (fmap nameLookup) $ cycles'
 ```
 
-Then, once we've got the list, resolving the corpus is as simple as performing a right fold over the list of names:
+Then, once we've got the list, resolving the corpus is as simple as performing a right fold over the list of names and progressively enhancing the `Corpus Resolved`:
 
 ```haskell
 addToCorpus :: Corpus Core.Authored -> [Core.DocumentName] -> Corpus Core.Resolved -> Corpus Core.Resolved
@@ -531,8 +537,18 @@ addToCorpus auths names resolveds =
         resolveds
 ```
 
-## Next steps
+And that wraps up transclusion!
 
-That's a wrap!
+Obviously, I've skipped over a bunch of the other work, like:
+
+- How we build the transclusion references graph by filtering `Document`s down into a list of transclusion references, then extract the document names
+- How we excerpt documents using the provided transclusion options
+
+But most of the other code is the classic fitting-together-types work you see in Haskell, and isn't that interesting to discuss---in my opinion, the interesting stuff is what I've discussed:
+
+- My design decisions on adding new data types to the domain: `Transclusion`, `TransclusionOptions`, `Authored`, `Resolved`, `Corpus`
+- Using a topological sort to process a `Corpus Authored` into a `Corpus Resolved` efficiently
+
+## Further reading
 
 As always, I've got unit tests written for all this behaviour, and you can see the [latest version of Subtextual at my GitHub](https://github.com/julianferrone/subtextual).
