@@ -1,6 +1,6 @@
 ---
 date: '2025-05-05T19:46:58+10:00'
-draft: true
+draft: false
 title: 'Quick Tip: Separation of Concerns with Three Module Processes in Elixir'
 tags:
 - elixir
