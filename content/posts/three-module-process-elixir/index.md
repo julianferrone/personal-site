@@ -21,9 +21,7 @@ I've recently been using a tripartite model where I split that 2nd module into t
 | Server | Handle messages with a GenServer and call out to the the business logic in `Impl`. |
 | Impl | Business logic - the bulk of the program. |
 
-This will make more sense with an example.
-
-Here's a stack process that can:
+Let me illustrate with an example---a stack process that can:
 
 - Push items onto a stack
 - Pop items off the top of a stack (returning `:empty` if the stack is empty)
@@ -42,7 +40,7 @@ defmodule Stack.Impl do
 end
 ```
 
-Now that we have the business logic, we want to expose it through a GenServer so that we can run a process:
+Now that we have the business logic, we want to expose it through a GenServer so that we can run a process. The only responsibility of `Stack.Server` is to be a simple GenServer wrapper over our business logic---handling call/cast messages by matching them to our functions.
 
 ```elixir
 defmodule Stack.Server do
@@ -81,8 +79,6 @@ defmodule Stack.Server do
   end
 end
 ```
-
-The only responsibility of `Stack.Server` is to be a simple GenServer wrapper over our business logic---handling call/cast messages by matching them to our functions.
 
 But it would be annoying to have to remember the messages we need to send to the server. That's why we provide helper functions for starting, stopping, and communicating with the server in `Stack.Client`:
 
