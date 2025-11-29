@@ -1,19 +1,22 @@
 {{ define "main" }}
 <div class="layouts/_default/single.html">
-    {{ .TableOfContents }}
     {{ $series := .Params.Series }}
     {{ if $series }}
     {{ $series_posts := sort (index .Site.Taxonomies.series $series) "PublishDate" "asc"}}
     {{ if gt ($series_posts | len) 1}}
-    <div class="other-posts-in-series">  
-        <strong>Posts in the Series</strong>  
-        <div>
+    <div id="other-posts-in-series">
+        <strong>Posts in the Series</strong>
+        <ol>
             {{ range $series_posts }}
             {{ .Render "series_row" }}
             {{ end }}
-        </div> 
+        </ol>
     </div>
     {{ end }}
+    <div id="contents">
+        <strong>Contents</strong>
+        {{ .TableOfContents }}
+    </div>
     {{ end }}
     {{ .Content }}
 </div>
