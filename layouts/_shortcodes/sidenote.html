@@ -1,17 +1,6 @@
-{{/*  <label class="sidenote-number"></label>
-<span class="sidenote">
-  {{ .Inner | .Page.RenderString }}
-</span>  */}}
-
-{{/* 
-  Usage:
-    Some text. {{< sidenote >}}This is a sidenote.{{< /sidenote >}}
-*/}}
-
-{{ $id := printf "sn-%d" (.Ordinal | default .Page.NextInSection) | urlize }}
-
+{{- $id := printf "sn-%d" (.Ordinal | default .Page.NextInSection) | urlize -}}
 <label class="sidenote-number" for="{{ $id }}"></label>
 <input type="checkbox" id="{{ $id }}" class="sidenote-toggle">
 <span class="sidenote">
-  {{ .Inner | markdownify }}
+  {{- .Inner | markdownify -}}
 </span>
