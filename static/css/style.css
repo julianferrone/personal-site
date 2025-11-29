@@ -9,6 +9,7 @@
 :root {
     /** Base colors */
     --clr-font-a0: #1f1e1c;
+    --clr-font-a10: #7f7e7c;
 
     /** Theme primary colors */
     --clr-primary-a0: #c90022;
@@ -32,6 +33,7 @@
 :root[data-theme="dark"] {
     /** Base colors */
     --clr-font-a0: #f5f5f5;
+    --clr-font-a10: #c5c5c5;
 
     /** Theme primary colors */
     --clr-primary-a0: #82c1ff;
@@ -74,11 +76,35 @@ body {
 }
 
 /* This wraps your whole page content */
-#container {
+/* Mobile */
+article {
     flex-grow: 1;
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 1rem;
+    width: 100%;
+    /* margin: 0 auto; */
+    padding-left: 1rem;
+    padding-right: 1rem;
+    box-sizing: border-box;
+}
+
+article>* {
+    width: 100%;
+}
+
+/* Desktop */
+@media (min-width: 801px) {
+    article {
+        display: flex;
+        flex-flow: column;
+        max-width: 70rem;
+        width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+        box-sizing: border-box;
+    }
+
+    article>* {
+        width: 60%;
+    }
 }
 
 .responsive-svg {
@@ -126,7 +152,7 @@ body {
     background-color: var(--clr-surface-a0);
 }
 
-@media (min-width: 601px) {
+@media (min-width: 801px) {
     .navbar a {
         padding: 0.5rem 1rem;
     }
@@ -176,7 +202,7 @@ footer img {
     margin: 0rem 0.25rem;
 }
 
-@media (min-width: 601px) {
+@media (min-width: 801px) {
 
     footer div,
     footer a {
@@ -211,7 +237,7 @@ footer img {
     font-size: 1.1rem;
 }
 
-@media (min-width: 601px) {
+@media (min-width: 801px) {
     .post-date {
         font-size: 1.2rem;
     }
@@ -231,7 +257,7 @@ footer img {
     color: var(--clr-primary-a0);
 }
 
-@media (min-width: 601px) {
+@media (min-width: 801px) {
     .post-title a {
         font-size: 1.2rem;
     }
@@ -245,7 +271,7 @@ footer img {
     display: none;
 }
 
-@media (min-width: 601px) {
+@media (min-width: 801px) {
     .post-tags {
         display: inline
     }
@@ -348,7 +374,7 @@ td>code {
 blockquote {
     margin-top: 1em;
     margin-bottom: 1em;
-    margin-left: em;
+    margin-left: 1em;
     padding-left: 1em;
     padding-right: 1em;
     padding-top: 0.1em;
@@ -362,8 +388,10 @@ blockquote {
 ******************* Other Posts in Series ******************
 ***********************************************************/
 
-.other-posts-in-series {
+#other-posts-in-series {
     padding: 1em;
+    margin-top: 1em;
+    margin-bottom: 1em;
     background-color: var(--clr-surface-a10);
 }
 
@@ -383,46 +411,79 @@ a:hover {
 ******************* Floating Side Content ******************
 ***********************************************************/
 
-/* Sidenote default (mobile first) */
+/* Table of contents default */
+#contents {
+    padding: 1em;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    background-color: var(--clr-surface-a10);
+}
+
+/***********************************************************
+************************* Sidenotes ************************
+***********************************************************/
+
+/* Global counter */
+body {
+    counter-reset: sidenote-counter;
+}
+
+/* Inline sidenote number */
+.sidenote-number {
+    counter-increment: sidenote-counter;
+    cursor: pointer;
+}
+
+.sidenote-number:hover {
+    color: var(--clr-primary-a0);
+}
+
+.sidenote-number::after,
+.sidenote::before {
+    content: counter(sidenote-counter);
+    font-size: 0.8em;
+    vertical-align: super;
+    margin-left: 0.15em;
+    font-style: normal;
+}
+
+/* Hidden checkbox */
+.sidenote-toggle {
+    display: none;
+}
+
+/* Desktop: classic Tufte float */
 .sidenote {
-    display: block;
-    width: 100%;
-    margin: 2rem 0;
-    padding-left: 0;
-    text-align: left;
-    float: none;
-    clear: both;
+    float: right;
+    clear: right;
+    margin-right: -60%;
+    width: 50%;
+    margin-bottom: 0;
+    vertical-align: baseline;
+    top: 0.1rem;
+    font-style: italic;
+    font-size: small;
+    color: var(--clr-font-a10);
 }
 
-/* Table of contents default (mobile first) */
-#TableOfContents {
-    position: relative;
-    width: 100%;
-    margin-bottom: 2rem;
-    max-height: none;
-    overflow: visible;
-}
+/* ---------- Mobile Behavior ---------- */
+@media (max-width: 800px) {
 
-
-/* Large screen layout */
-@media (min-width: 1400px) {
+    /* Stop floating on mobile */
     .sidenote {
-        float: left;
-        clear: left;
-        margin-left: -23vw;
-        top: -3rem;
-        width: 20vw;
-        margin-top: 1rem;
+        display: none;
+        /* hidden by default */
     }
 
-    #TableOfContents {
-        position: fixed;
-        right: 4%;
-        top: 150px;
-        width: 250px;
-        overflow-y: auto;
-        max-height: 85%;
-        margin-bottom: 0;
+    /* When checkbox is checked → reveal sidenote */
+    .sidenote-toggle:checked+.sidenote {
+        float: none;
+        width: fit-content;
+        max-width: 100%;
+        margin-top: 1em;
+        margin-bottom: 1em;
+        padding-top: 0.1em;
+        padding-bottom: 0.1em;
+        display: block;
     }
-
 }
