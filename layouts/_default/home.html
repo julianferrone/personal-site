@@ -1,5 +1,6 @@
 {{ define "main" }}
-<div layout="layouts/_default/home.html">
+<div class="home">
+    <h1> {{ .Title }} </h1>
     {{ .Content }}
     <h2>Recent Posts</h2>
     {{ $posts := first 5 (sort (where .Site.RegularPages "Section" "posts") "PublishDate" "desc") }}

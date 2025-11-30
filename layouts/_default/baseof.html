@@ -27,32 +27,30 @@
             </svg>
         </button>
     </nav>
-    <article>
-        <h1> {{ .Title }} </h1>
+    <div class="content">
         {{ block "main" . }}
         {{ end }}
-    </article>
+    </div>
     <footer>
-        <div>Socials:</div>
         <a href="https://github.com/julianferrone/">
-            {{/*  <img src="/img/github.svg" id="github" width="24" height="24">  */}}
+            {{/* <img src="/img/github.svg" id="github" width="24" height="24"> */}}
             <svg class="responsive-svg" width="24" height="24">
                 <use href="/img/icons.svg#github" />
             </svg>
-            GitHub
+            {{/*  GitHub  */}}
         </a>
         <a href="https://x.com/julianferrone/">
-            {{/*  <img src="/img/twitter_x.svg" id="twitter" width="24" height="24">  */}}
+            {{/* <img src="/img/twitter_x.svg" id="twitter" width="24" height="24"> */}}
             <svg class="responsive-svg" width="24" height="24">
                 <use href="/img/icons.svg#twitter_x" />
             </svg>
-            X / Twitter
+            {{/*  X / Twitter  */}}
         </a>
         <a href="https://www.instagram.com/julianferrone/">
             <svg class="responsive-svg" width="24" height="24">
                 <use href="/img/icons.svg#instagram" />
             </svg>
-            Instagram
+            {{/*  Instagram  */}}
         </a>
     </footer>
 </body>

@@ -1,7 +1,8 @@
 {{ define "main" }}
-<div class="posts">
+<div class="home">
+    <h1> {{ .Title }} </h1>
     {{ range sort .Pages "PublishDate" "desc" }}
-        {{.Render "post_row" }}
+    {{.Render "post_row" }}
     {{ end }}
 </div>
 {{ end }}

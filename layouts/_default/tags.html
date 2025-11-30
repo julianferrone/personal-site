@@ -1,5 +1,6 @@
 {{ define "main" }}
-<div layout="layout/_default/tags.html">
+<div class="home">
+    <h1> {{ .Title }} </h1>
     {{ $taxonomy := .Site.Taxonomies.tags }}
     <nav>
         <ul>

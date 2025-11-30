@@ -1,5 +1,6 @@
 {{ define "main" }}
-<div class="layouts/_default/single.html">
+<article class="layouts/_default/single.html">
+    <h1> {{ .Title }} </h1>
     {{ $series := .Params.Series }}
     {{ if $series }}
     {{ $series_posts := sort (index .Site.Taxonomies.series $series) "PublishDate" "asc"}}
@@ -19,5 +20,5 @@
     </div>
     {{ end }}
     {{ .Content }}
-</div>
+</article>
 {{ end }}

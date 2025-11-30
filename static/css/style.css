@@ -75,35 +75,54 @@ body {
     flex-direction: column;
 }
 
-/* This wraps your whole page content */
-/* Mobile */
-article {
+.content {
     flex-grow: 1;
     width: 100%;
-    /* margin: 0 auto; */
-    padding-left: 1rem;
-    padding-right: 1rem;
     box-sizing: border-box;
 }
 
-article>* {
+/* This wraps your whole page content */
+/* Mobile */
+article,
+.home,
+.posts_all,
+.tags {
+    /* margin: 0 auto; */
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+article>*,
+.home>* {
     width: 100%;
 }
 
 /* Desktop */
 @media (min-width: 801px) {
-    article {
+
+    .content {
         display: flex;
         flex-flow: column;
-        max-width: 75rem;
-        width: 100%;
-        margin-left: auto;
-        margin-right: auto;
         box-sizing: border-box;
     }
 
     article>* {
         width: 60%;
+    }
+
+    article,
+    .home {
+        width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    article {
+        max-width: 75rem;
+    }
+
+    .home {
+        max-width: 50rem;
     }
 }
 
@@ -230,6 +249,8 @@ footer img {
     grid-template-columns: 120px 1fr max-content;
     gap: 1rem;
     align-items: start;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
 }
 
 .post-date {
@@ -483,18 +504,18 @@ body {
     margin-bottom: 0;
     vertical-align: baseline;
     /* position: relative; */
-    top: 0.1rem;
+    top: 0rem;
     font-style: italic;
     font-size: small;
     color: var(--clr-font-a10);
 }
 
-.sidenote > span:first-child {
+.sidenote>span:first-child {
     display: inline
 }
 
-.sidenote > span {
-    display: block;
+.sidenote>span {
+    display: inline-block;
     margin-top: 0.5cap;
 }
 
