@@ -198,7 +198,6 @@ footer {
     flex-direction: row;
     align-items: center;
     justify-content: end;
-    height: var(--navbar-height);
 }
 
 footer div,
@@ -210,6 +209,8 @@ footer a {
     vertical-align: middle;
     display: flex;
     align-items: center;
+    height: 100%;
+    aspect-ratio: 1 / 1;
 }
 
 footer a:hover {
@@ -217,21 +218,14 @@ footer a:hover {
     color: var(--clr-font-a0);
 }
 
-footer img {
-    margin: auto;
+footer svg {
+    margin-left: auto;
+    margin-right: auto;
 }
 
 @media (min-width: 801px) {
-
-    footer div,
-    footer a {
-        height: 100%;
-        aspect-ratio: 1 / 1;
-    }
-
-    footer svg {
-        margin-left: auto;
-        margin-right: auto;
+    footer {
+        height: var(--navbar-height);
     }
 }
 
