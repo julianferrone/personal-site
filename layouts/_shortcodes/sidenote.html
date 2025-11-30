@@ -4,7 +4,7 @@
 {{- $paragraphs := split .Inner "\r\n\r\n" -}}
 <span class="sidenote">
   {{- range $paragraphs -}}
-  <span>
+  <span class="sidenote-paragraph">
     {{- $.Page.RenderString (dict "display" "inline") . -}}
   </span>
   {{- end -}}
