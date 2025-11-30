@@ -198,11 +198,11 @@ footer {
     flex-direction: row;
     align-items: center;
     justify-content: end;
+    height: var(--navbar-height);
 }
 
 footer div,
 footer a {
-    padding: 0.5rem 0.25rem;
     font-weight: bold;
     text-decoration: none;
     font-size: medium;
@@ -218,18 +218,20 @@ footer a:hover {
 }
 
 footer img {
-    margin: 0rem 0.25rem;
+    margin: auto;
 }
 
 @media (min-width: 801px) {
 
     footer div,
     footer a {
-        padding: 1rem 0.5rem;
+        height: 100%;
+        aspect-ratio: 1 / 1;
     }
 
-    footer img {
-        margin: 0rem 0.5rem;
+    footer svg {
+        margin-left: auto;
+        margin-right: auto;
     }
 }
 
