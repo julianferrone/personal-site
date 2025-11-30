@@ -76,6 +76,8 @@ body {
 }
 
 .content {
+    padding-left: 1rem;
+    padding-right: 1rem;
     flex-grow: 1;
     width: 100%;
     box-sizing: border-box;
@@ -83,14 +85,6 @@ body {
 
 /* This wraps your whole page content */
 /* Mobile */
-article,
-.home,
-.posts_all,
-.tags {
-    /* margin: 0 auto; */
-    padding-left: 1rem;
-    padding-right: 1rem;
-}
 
 article>*,
 .home>* {
@@ -99,7 +93,6 @@ article>*,
 
 /* Desktop */
 @media (min-width: 801px) {
-
     .content {
         display: flex;
         flex-flow: column;
