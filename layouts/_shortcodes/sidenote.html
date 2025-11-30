@@ -3,9 +3,9 @@
 <input type="checkbox" id="{{ $id }}" class="sidenote-toggle">
 {{- $paragraphs := split .Inner "\r\n\r\n" -}}
 <span class="sidenote">
-  {{ range $paragraphs }}
+  {{- range $paragraphs -}}
   <span>
     {{- $.Page.RenderString . -}}
   </span>
-  {{ end }}
+  {{- end -}}
 </span>
