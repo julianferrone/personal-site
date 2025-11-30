@@ -5,7 +5,7 @@
 <span class="sidenote">
   {{- range $paragraphs -}}
   <span>
-    {{- $.Page.RenderString . -}}
+    {{- $.Page.RenderString (dict "display" "inline") . -}}
   </span>
   {{- end -}}
 </span>
