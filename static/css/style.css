@@ -324,7 +324,6 @@ h6:hover .heading-link {
 table {
     border-collapse: collapse;
     /* Ensures borders don't double up */
-    width: 100%;
     margin-bottom: 1rem;
 }
 
