@@ -323,7 +323,7 @@ defmodule MatryoshkaTest.SftpStoreTest do
   end
 ```
 
-## Matroshka is Published
+## Matryoshka is Published
 
 There's plenty of extra work that I could do to improve Matryoshka.
 
