@@ -1,11 +1,12 @@
 {{- $id := printf "sn-%d" (.Ordinal | default .Page.NextInSection) | urlize -}}
 <label class="sidenote-number" for="{{ $id }}"></label>
 <input type="checkbox" id="{{ $id }}" class="sidenote-toggle">
-{{- $paragraphs := split .Inner "\r\n\r\n" -}}
+{{/* Replace \r\n with \n so that this should work on both Unix and Windows */}}
+{{- $paragraphs := split (replace .Inner "\r\n" "\n") "\n\n" -}}
 <span class="sidenote">
   {{- range $paragraphs -}}
   <span class="sidenote-paragraph">
-    {{- $.Page.RenderString (dict "display" "inline") . -}}
+    {{- $.Page.RenderString (dict "display" "inline") . | safeHTML -}}
   </span>
   {{- end -}}
 </span>
