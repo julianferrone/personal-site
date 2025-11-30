@@ -17,20 +17,20 @@ Remember, your app isn't Real Software unless it uses Microservices™.
 
 Originally, I wanted to write a `HttpStore` that would map get/fetch/put/delete calls to HTTP GET/POST/DELETE requests, but I don't think it's possible to make it generic since you'd have to write the implementation against the specific API requirements{{< sidenote >}}Speaking of S3, I probably should've built my HttpStore to expect a server that exposes the same interface as [the S3 REST API](https://docs.aws.amazon.com/AmazonS3/latest/API/RESTAPI.html). Perhaps I'll implement `Matryoshka.S3Store` one day.{{< /sidenote >}} of your key-value server:
 
-- Does the KV server expose a version? How so? 
-    - Is it `/v1/`?
-    - Or `/2.0/`?
-    - Or `/20251128/`?
-    - Or `/api/v4/`?
-    - Or something entirely different?
+- Does the KV server expose a version? How so?
+  - Is it `/v1/`?
+  - Or `/2.0/`?
+  - Or `/20251128/`?
+  - Or `/api/v4/`?
+  - Or something entirely different?
 - Which routes does the KV server expose? What's the namespace? Is it `/kv/`, or is it `/store/`, or is it something else?
 - Does the KV server even expose the difference between a key being set to a null value (which should be returned as `{:ok, nil}` by `fetch/1`) and a key not being set at all (which should be returned as `{:error, {:no_ref, ref}}` by `fetch/1`)?
 
 So `HttpStore` has been left as an exercise for the reader.
 
-Instead, I'll write a remote store backed by an SFTP client---a `SftpStore`. 
+Instead, I'll write a remote store backed by an SFTP client---a `SftpStore`.
 
-Why SFTP? 
+Why SFTP?
 
 For starters, I deal with it all the time at my job at [S&P Financial Risk Analytics](https://www.spglobal.com/market-intelligence/en/solutions/financial-risk-analytics).  For some of our clients, we offer a risk pricing service where they ship us their data (their portfolio, counterparties, and other reference data) over SFTP, we run the pricing, and then we upload the risk results back to SFTP for them to use.{{< sidenote >}}This is typically driven either by A\) regulatory requirements, or B\) wanting a more accurate understanding of market exposures so they can trade better.{{< /sidenote >}}
 
@@ -67,6 +67,7 @@ The `:ssh_sftp` module (which implements an SFTP client) [documentation](https:/
 >```erlang
 >-spec start_channel(ssh:host(), inet:port_number(), [ssh:client_option() | sftp_option()]) -> {ok, pid(), ssh:connection_ref()} | {error, reason()}.
 >```
+>
 >Starts new ssh connection and channel for communicating with the SFTP server.
 >
 >The returned pid for this process is to be used as input to all other API functions in this module.
@@ -80,6 +81,7 @@ It turns out one of the `ssh:client_option()` is `authentication_client_options(
 > ```erlang
 > -type authentication_client_options() :: {user, string()} | {password, string()}.
 > ```
+>
 > **`user`** - Provides the username. If this option is not given, `ssh` reads from the environment (LOGNAME or USER on UNIX, USERNAME on Windows).
 >
 > **`password`** - Provides a password for password authentication. If this option is not given, the user is asked for a password, if the password authentication method is attempted.
@@ -242,11 +244,12 @@ Let's briefly discuss the [testing suite for SftpStore](https://github.com/julia
 >-spec daemon(any | inet:ip_address(), inet:port_number(), daemon_options()) -> {ok, daemon_ref()} | {error, term()};
 >(socket, open_socket(), daemon_options()) -> {ok, daemon_ref()} | {error, term()}. 
 >```
+>
 >Starts a server listening for SSH connections on the given port. If the Port is 0, a random free port is selected. See daemon_info/1 about how to find the selected port number.
 
 So in testing, I initialise an SFTP server with username "user", password "password", and a subsystem specification of `:ssh_sftpd`, which tells the `:ssh` daemon to act as an SFTP filesystem{{< sidenote >}}An `:ssh` daemon uses both generic SSH channel functionality (e.g. flow control, close messages) provided by `:ssh_server_channel` and application-specific functionality (here, reading and writing files) which get used via a callback API.
 
-This is classic Erlang style programming. 
+This is classic Erlang style programming.
 
 Another good example is GenServers, which implement generic server functionality, and which you specialise by writing callback handlers (via `handle_call/3` and `handle_cast/2`) for application-specific functionality.{{< /sidenote >}}. Then we connect to it with a `SftpStore` and test get/fetch/put/delete.
 
