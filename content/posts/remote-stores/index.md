@@ -7,6 +7,7 @@ tags:
 - programming
 publishDate: '2025-11-29'
 series: matryoshka
+summary: "I extend Matryoshka, my composable key-value storage Elixir library, with stores that read to and write from external services."
 ---
 
 In the last post, I wrote some stores which persist their key-value pairs to disk.
