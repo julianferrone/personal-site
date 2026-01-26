@@ -12,6 +12,10 @@
     --rubric: #8b1d18;       /* rich red */
     --muted: #5a5a5a;
     --rule: #b8b1a4;
+
+    /* Typography */
+    --font-body: "EB Garamond", "Garamond", "Caslon", serif;
+    --font-mono: "Berkeley Mono", monospace;
 }
 
 :root[data-theme="dark"] {
@@ -31,7 +35,7 @@ html {
     background: var(--paper);
     color: var(--ink);
     height: 100%;
-    font-family: "EB Garamond", "Garamond", "Caslon", serif;
+    font-family: var(--font-body);
     line-height: 1.6;
     scroll-behavior: smooth;
 }
@@ -116,7 +120,7 @@ article>*,
 }
 
 .navbar #theme-switch {
-    font-family: "EB Garamond", "Garamond", "Caslon", serif;
+    font-family: var(--font-body);
     font-variant: small-caps;
     font-size: 0.85rem;
     border-style: none;
@@ -237,7 +241,7 @@ td {
 td.date {
     width: 8rem;
     font-size: 0.9rem;
-    font-family: "Berkeley Mono", monospace;
+    font-family: var(--font-mono); 
     color: var(--muted);
     white-space: nowrap;
 }
@@ -507,7 +511,7 @@ article > p:first-of-type::first-letter {
 ***********************************************************/
 
 p.filename {
-    font-family: "Berkeley Mono", monospace;
+    font-family: var(--font-mono); 
     color: var(--ink-subtle);
     margin: 0;
 }
@@ -518,7 +522,7 @@ pre {
 }
 
 code {
-    font-family: "Berkeley Mono", monospace;
+    font-family: var(--font-mono); 
 }
 
 pre,
