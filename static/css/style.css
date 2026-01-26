@@ -7,22 +7,21 @@
 **************/
 
 :root {
-  --ink: #1a1b1c;          /* warm black */
-  --paper: #f6f1e7;        /* parchment */
-  --rubric: #8b1d18;       /* rich red */
-  --muted: #5a5a5a;
-  --rule: #b8b1a4;
+    --ink: #1a1b1c;          /* warm black */
+    --paper: #f6f1e7;        /* parchment */
+    --rubric: #8b1d18;       /* rich red */
+    --muted: #5a5a5a;
+    --rule: #b8b1a4;
 }
 
-/* @media (prefers-color-scheme: dark) {
-  :root {
+:root[data-theme="dark"] {
     --ink: #e4e1dc;
     --paper: #141312;
-    --rubric: #c14a43;
+    --rubric: #44b2da;       /* pale blue */
     --muted: #9a978f;
     --rule: #3a3834;
-  }
-} */
+}
+
 
 /**************
 ********* Elements
