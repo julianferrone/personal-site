@@ -13,12 +13,24 @@
         </ul>
     </nav>
     {{ range $tag, $pages := $taxonomy }}
-    <h2 id="{{ $tag | urlize }}">{{ $tag }}</h2>
-    <div class="posts">
-        {{ range sort $pages "PublishDate" "desc" }}
-        {{.Render "post_row" }}
-        {{ end }}
-    </div>
+    <section class="tag">
+        <h2 id="{{ $tag | urlize }}">{{ $tag }}</h2>
+        <table class="posts">
+            <tbody>
+            {{ range sort $pages "PublishDate" "desc" }}
+            {{- $datetime := .PublishDate.Format "2006-01-02" -}}
+            <tr class="post">
+                <td class="date">
+                    <time datetime="{{ $datetime }}">{{ $datetime }}</time>
+                </td>
+                <td class="title">
+                    <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+                </td>
+            </tr>
+            {{ end }}
+            </tbody>
+        </table>
+    </section>
     {{ end }}
 </div>
 {{ end }}

@@ -196,55 +196,106 @@ footer svg {
 }
 
 /***********************************************************
-********************** Post Summaries **********************
+************************** Tables **************************
 ***********************************************************/
 
-.post-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+table.post {
+    width: 100%;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+thead {
+    border-bottom: 1px solid var(--rule);
+}
+
+th {
+    text-align: left;
+    font-weight: normal;
+    font-variant: small-caps;
+    letter-spacing: 0.04em;
+    color: var(--rubric);
+    padding-bottom: 0.5rem;
+    font-size: 0.85rem;
+}
+
+tbody tr {
+    border-bottom: 1px solid var(--rule);
+}
+
+tbody tr:last-child {
+    border-bottom: none;
+}
+
+td {
+    padding: 0.75rem 0;
+    vertical-align: middle;
+}
+
+td.date {
+    width: 8rem;
+    font-size: 0.9rem;
+    font-family: "Berkeley Mono", monospace;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+td.title a {
+    color: var(--ink);
+    text-decoration: none;
+}
+
+td.title a:hover {
+    text-decoration: underline;
+}
+
+td.tags {
+    width: 14rem;
+    font-size: 0.85rem;
+}
+
+td.tags ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+td.tags li {
+    display: inline;
+}
+
+td.tags li:not(:last-child)::after {
+    content: ", ";
+    color: var(--muted);
 }
 
 
-.post-row {
-    display: grid;
-    grid-template-columns: 120px 1fr max-content;
-    gap: 1rem;
-    align-items: start;
-    margin-top: 1rem;
-    margin-bottom: 1rem;
-}
+tr.post {
+    td.title a {
+        color: var(--ink);
+        font-size: 1.1rem;
+        text-decoration: dashed underline;
+    }
 
-.post-date {
-    font-family: 'Berkeley Mono', Courier, monospace;
-    font-size: 1.1rem;
-}
+    td.title a:hover {
+        color: var(--rubric);
+    }
 
-@media (min-width: 801px) {
-    .post-date {
-        font-size: 1.2rem;
+    @media (min-width: 801px) {
+        td.title a {
+            font-size: 1.2rem;
+        }
     }
 }
+
+
 
 /**************
 ********* Post Title
 **************/
 
-.post-title a {
-    color: var(--ink);
-    font-size: 1.1rem;
-    text-decoration: dashed underline;
-}
-
-.post-title a:hover {
-    color: var(--rubric);
-}
-
-@media (min-width: 801px) {
-    .post-title a {
-        font-size: 1.2rem;
-    }
-}
 
 /**************
 ********* Post Tags
@@ -274,6 +325,19 @@ footer svg {
 ************************** Headers *************************
 ***********************************************************/
 
+h1 {
+    font-size: 2.2rem;
+    font-weight: normal;
+    margin-bottom: 0.5rem;
+}
+
+h2 {
+    font-size: 1.1rem;
+    font-weight: normal;
+    font-variant: small-caps;
+    margin-top: 0;
+}
+
 /* Hide anchor by default */
 .heading-link {
     opacity: 0;
@@ -300,11 +364,6 @@ h6:hover .heading-link {
     width: 100%;
 }
 
-.title-page h1 {
-  font-size: 2.2rem;
-  font-weight: normal;
-  margin-bottom: 0.5rem;
-}
 
 .title-page .author {
   font-size: 1rem;
@@ -383,6 +442,47 @@ section.preface > * {
 }
 
 /***********************************************************
+************************* Tag Index ************************
+***********************************************************/
+
+section.tag {
+    margin-bottom: 3rem;
+}
+section.tag h2 {
+    font-weight: normal;
+    font-size: 1.3rem;
+    margin-bottom: 0.8rem;
+}
+
+section.tag ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+section.tag li {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.4rem;
+}
+
+section.tag time {
+  font-size: 0.85rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+section.tag a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+section.tag a:hover {
+  text-decoration: underline;
+}
+
+
+/***********************************************************
 ************************ Paragraphs*************************
 ***********************************************************/
 
@@ -401,29 +501,6 @@ article > p:first-of-type::first-letter {
 /***********************************************************
 ************************** Tables **************************
 ***********************************************************/
-
-table {
-    border-collapse: collapse;
-    /* Ensures borders don't double up */
-    margin-bottom: 1rem;
-}
-
-th,
-td {
-    border: 0.15em solid var(--ink);
-    /* Adds the actual outline */
-    padding: 0.5rem;
-    text-align: left;
-}
-
-td {
-    background-color: var(--clr-surface-a10);
-}
-
-th {
-    background-color: var(--clr-surface-a30);
-}
-
 
 /***********************************************************
 ************************ Code Blocks ***********************

@@ -1,16 +1,19 @@
-<div class="post-row">
-    <div class="post-date">{{ .PublishDate.Format "2006-01-02" }}</div>
-    <div class="post-title">
+{{- $datetime := .PublishDate.Format "2006-01-02" -}}
+<tr class="post">
+    <td class="date">
+        <time datetime="{{ $datetime }}">{{ $datetime }}</time>
+    </td>
+    <td class="title">
         <a href="{{ .RelPermalink }}">{{ .Title }}</a>
-    </div>
-    <div class="post-tags">
-        {{ if .Params.tags }}
-        {{ range sort .Params.tags }}
-        {{ $href := add "../tags#" . }}
-        <div class="post-tag">
-            <a href="{{ $href }}">{{ . }}</a>
-        </div>
-        {{ end }}
-        {{ end }}
-    </div>
-</div>
+    </td>
+    <td class="tags">
+        <ul>
+            {{- if .Params.tags -}}
+            {{- range sort .Params.tags -}}
+            {{- $href := add "../tags#" . -}}
+            <li class="tag"><a href="{{ $href }}">{{ . }}</a></li>
+            {{- end -}}
+            {{- end -}}
+        </ul>
+    </td>
+</tr>

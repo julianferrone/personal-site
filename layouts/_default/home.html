@@ -3,11 +3,20 @@
     <h1> {{ .Title }} </h1>
     {{ .Content }}
     <h2>Recent Posts</h2>
-    {{ $posts := first 5 (sort (where .Site.RegularPages "Section" "posts") "PublishDate" "desc") }}
-    <div class="posts">
+    <table class="posts">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Title</th>
+                <th>Tags</th>
+            </tr>
+        </thead>
+        <tbody>
+        {{ $posts := first 5 (sort (where .Site.RegularPages "Section" "posts") "PublishDate" "desc") }}
         {{ range $posts }}
         {{ .Render "post_row"}}
         {{ end }}
-    </div>
+        </tbody>
+    </table>
 </div>
 {{ end }}
