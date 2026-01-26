@@ -113,6 +113,7 @@ article>*,
 
 .navbar a:hover {
     text-decoration: underline;
+    color: var(--rubric);
 }
 
 .navbar #theme-switch {
@@ -123,7 +124,7 @@ article>*,
 }
 
 .navbar #theme-switch:hover {
-    background-color: var(--clr-surface-a0);
+    color: var(--rubric);
 }
 
 @media (min-width: 801px) {
@@ -226,7 +227,7 @@ footer svg {
 }
 
 .post-title a:hover {
-    color: var(--clr-primary-a0);
+    color: var(--rubric);
 }
 
 @media (min-width: 801px) {
@@ -255,7 +256,7 @@ footer svg {
     }
 
     .post-tags a:hover {
-        color: var(--ink)
+        color: var(--rubric)
     }
 }
 
@@ -330,15 +331,15 @@ section.preface {
     gap: 2rem;
 }
 
- section.preface > * {
-    flex: 1 1 0px;
- }
-
 @media (min-width: 801px) {
     section.preface {
         /* grid-template-columns: 1fr 1fr; */
         flex-direction: row;
     }
+}
+
+section.preface > * {
+    flex: 1 1 0px;
 }
 
 .preface h2 {
@@ -476,7 +477,7 @@ blockquote {
     margin-left: 0;
     margin-right: 0;
     padding: 1rem;
-    border-left: 0.2em solid var(--clr-primary-a0);
+    border-left: 0.2em solid var(--rubric);
     background-color: var(--clr-surface-a10);
 }
 
@@ -494,7 +495,7 @@ a {
 }
 
 a:hover {
-    color: var(--clr-primary-a0);
+    color: var(--rubric);
 }
 
 /***********************************************************
@@ -513,7 +514,7 @@ body {
 }
 
 .sidenote-number:hover {
-    color: var(--clr-primary-a0);
+    color: var(--rubric);
 }
 
 .sidenote-number::after,
