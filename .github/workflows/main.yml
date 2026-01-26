@@ -15,7 +15,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Set up hugo
         run: |
-          sudo snap install hugo
+          # The snap store is currently having issues with Hugo so migrating to 
+          # install from the edge channel
+          # https://discourse.gohugo.io/t/what-happened-to-the-hugo-snap-store-ubuntu/56580
+          sudo snap install --edge hugo
           hugo version
       - name: Generate static site 📄
         run: hugo
