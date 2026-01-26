@@ -279,6 +279,65 @@ h6:hover .heading-link {
     opacity: 1;
 }
 
+
+/***********************************************************
+************************** Preface *************************
+***********************************************************/
+    
+section.preface {
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    padding: 2rem 0;
+    margin-bottom: 3rem;
+    width: 100%;
+  /* display: grid; */
+  /* grid-template-columns: 1fr; */
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+ section.preface > * {
+    flex: 1 1 0px;
+ }
+
+@media (min-width: 801px) {
+    section.preface {
+        /* grid-template-columns: 1fr 1fr; */
+        flex-direction: row;
+    }
+}
+
+.preface h2 {
+  font-size: 1.1rem;
+  font-weight: normal;
+  font-variant: small-caps;
+  color: var(--rubric);
+  margin-top: 0;
+}
+
+.preface a {
+    text-decoration: none;
+}
+
+.preface a:hover {
+    text-decoration: underline;
+}
+
+.preface ul {
+    list-style: none;
+    padding-left: 1.2rem;
+    margin: 0;
+}
+
+.preface ol {
+    list-style: upper-roman;
+}
+
+.preface li {
+    margin-bottom: 0.4rem;
+}
+
 /***********************************************************
 ************************ Paragraphs*************************
 ***********************************************************/
@@ -393,13 +452,6 @@ blockquote {
 ******************* Other Posts in Series ******************
 ***********************************************************/
 
-#other-posts-in-series {
-    padding: 1em;
-    margin-top: 1em;
-    margin-bottom: 1em;
-    background-color: var(--clr-surface-a10);
-}
-
 /***********************************************************
 *************************** Links **************************
 ***********************************************************/
@@ -410,18 +462,6 @@ a {
 
 a:hover {
     color: var(--clr-primary-a0);
-}
-
-/***********************************************************
-******************* Floating Side Content ******************
-***********************************************************/
-
-/* Table of contents default */
-#contents {
-    padding: 1em;
-    margin-top: 1em;
-    margin-bottom: 1em;
-    background-color: var(--clr-surface-a10);
 }
 
 /***********************************************************

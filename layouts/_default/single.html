@@ -1,24 +1,29 @@
 {{ define "main" }}
 <article class="layouts/_default/single.html">
-    <h1> {{ .Title }} </h1>
-    {{ $series := .Params.Series }}
-    {{ if $series }}
-    {{ $series_posts := sort (index .Site.Taxonomies.series $series) "PublishDate" "asc"}}
-    {{ if gt ($series_posts | len) 1}}
-    <div id="other-posts-in-series">
-        <strong>Posts in the Series</strong>
-        <ol>
-            {{ range $series_posts }}
-            {{ .Render "series_row" }}
-            {{ end }}
-        </ol>
-    </div>
-    {{ end }}
-    {{ end }}
-    <div id="contents">
-        <strong>Contents</strong>
-        {{ .TableOfContents }}
-    </div>
+    <section class="title-page">
+        <h1> {{ .Title }} </h1>
+        <div class="divider">❦</div>
+    </section>
+    <section class="preface">
+        {{ $series := .Params.Series }}
+        {{ if $series }}
+        {{ $series_posts := sort (index .Site.Taxonomies.series $series) "PublishDate" "asc"}}
+        {{ if gt ($series_posts | len) 1}}
+        <div id="series">
+            <h2>In This Series</h2>
+            <ol>
+                {{ range $series_posts }}
+                {{ .Render "series_row" }}
+                {{ end }}
+            </ol>
+        </div>
+        {{ end }}
+        {{ end }}
+        <div id="contents">
+            <h2>Contents</h2>
+            {{ .TableOfContents }}
+        </div>
+    </section>
     {{ .Content }}
     {{ partial "comments.html" . }}
 </article>
