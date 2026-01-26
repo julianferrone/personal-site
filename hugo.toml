@@ -2,6 +2,7 @@ baseURL = 'https://julianferrone.com'
 languageCode = 'en-us'
 title = 'Julian Ferrone'
 timeZone = 'Australia/Sydney'
+enableGitInfo = true
 
 [taxonomies]
 tag = "tags"

@@ -2,7 +2,15 @@
 <article class="layouts/_default/single.html">
     <section class="title-page">
         <h1> {{ .Title }} </h1>
+        <div class="author">
+        {{- with .GitInfo -}}
+            {{ .AuthorName }}
+        {{- end -}}
+        </div>
         <div class="divider">❦</div>
+        <div class="imprint">
+        Published: {{ .PublishDate | time.Format ":date_long" }}
+        </div>
     </section>
     <section class="preface">
         {{ $series := .Params.Series }}

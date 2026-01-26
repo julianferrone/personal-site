@@ -279,6 +279,39 @@ h6:hover .heading-link {
     opacity: 1;
 }
 
+/***********************************************************
+**************************Title Page************************
+***********************************************************/
+
+.title-page {
+    text-align: center;
+    margin-bottom: 4rem;
+    width: 100%;
+}
+
+.title-page h1 {
+  font-size: 2.2rem;
+  font-weight: normal;
+  margin-bottom: 0.5rem;
+}
+
+.title-page .author {
+  font-size: 1rem;
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.5rem;
+}
+
+.divider {
+  margin: 1.5rem auto;
+  color: var(--rubric);
+  font-size: 1.1rem;
+}
+
+.imprint {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
 
 /***********************************************************
 ************************** Preface *************************
