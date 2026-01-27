@@ -6,6 +6,7 @@ tags:
 - elixir
 - programming
 publishDate: '2025-09-05'
+summary: "Organize Elixir code by splitting the client API, concurrent state, and pure business logic into three modules."
 ---
 
 Most of the Elixir code I've seen typically splits processes into two modules:
