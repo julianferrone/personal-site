@@ -2,4 +2,4 @@
 title: "Posts"
 ---
 
-This line is from `content/posts/_index.md`
+All the posts I've published, in reverse chronological order.

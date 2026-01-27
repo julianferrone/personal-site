@@ -15,7 +15,6 @@ series = "series"
 [outputs]
 home = ["HTML"]
 section = ["HTML"]
-taxonomy = []      # disables /tags/foo/ etc.
 
 [markup]
   [markup.highlight]

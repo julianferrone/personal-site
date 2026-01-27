@@ -29,6 +29,26 @@
             </svg>
         </button>
     </nav>
+    <section class="title-page">
+        <h1> {{ .Title }} </h1>
+        <div class="author">{{ .Site.Params.author.name }}</div>
+        <div class="divider">❦</div>
+        {{ if (and .IsPage .Params.summary) }}
+        <div class="summary">
+        {{ .Summary }}
+        </div>
+        {{ end }}
+        {{ if (not .IsPage) }}
+        <div class="summary">
+        {{ .Content }}
+        </div>
+        {{ end }}
+        {{ if .IsPage }}
+        <div class="imprint">
+        Published: {{ .PublishDate | time.Format ":date_long" }}
+        </div>
+        {{ end }}
+    </section>
     <div class="content">
         {{ block "main" . }}
         {{ end }}

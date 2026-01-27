@@ -1,18 +1,21 @@
 {{ define "main" }}
 <div class="home">
-    <h1> {{ .Title }} </h1>
+    <section>
+    <h2>Tags</h2>
     {{ $taxonomy := .Site.Taxonomies.tags }}
     <nav>
         <ul>
-            {{ range $tag, $_ := $taxonomy }}
+            {{ range $tag, $pages := $taxonomy }}
             {{ $href := add "/tags#" $tag }}
+            {{ $numPosts := $pages | len }}
             <li>
-                <a href="{{ $href }}">{{ $tag }}</a>
+                <a href="{{ $href }}">{{ $tag }} ({{ $numPosts }})</a>
             </li>
             {{ end }}
         </ul>
     </nav>
     {{ range $tag, $pages := $taxonomy }}
+    </section>
     <section class="tag">
         <h2 id="{{ $tag | urlize }}">{{ $tag }}</h2>
         <table class="posts">
