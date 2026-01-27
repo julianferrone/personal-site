@@ -372,32 +372,34 @@ h6:hover .heading-link {
     text-align: center;
     margin-bottom: 4rem;
     width: 100%;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--rule);
 }
 
 
 .title-page .author {
-  font-size: 1rem;
-  font-variant: small-caps;
-  letter-spacing: 0.05em;
-  margin-bottom: 1.5rem;
+    font-size: 1rem;
+    font-variant: small-caps;
+    letter-spacing: 0.05em;
+    margin-bottom: 1.5rem;
 }
 
 .divider {
-  margin: 1.5rem auto;
-  color: var(--rubric);
-  font-size: 1.1rem;
+    margin: 1.5rem auto;
+    color: var(--rubric);
+    font-size: 1.1rem;
 }
 
 
 .summary {
-  font-size: 0.85rem;
-  color: var(--muted);
-  margin: 1.5rem auto;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin: 1.5rem auto;
 }
 
 .imprint {
-  font-size: 0.85rem;
-  color: var(--muted);
+    font-size: 0.85rem;
+    color: var(--muted);
 }
 
 /***********************************************************
@@ -405,9 +407,8 @@ h6:hover .heading-link {
 ***********************************************************/
     
 section.preface {
-    border-top: 1px solid var(--rule);
     border-bottom: 1px solid var(--rule);
-    padding: 2rem 0;
+    padding-bottom: 2rem;
     margin-bottom: 3rem;
     width: 100%;
   /* display: grid; */

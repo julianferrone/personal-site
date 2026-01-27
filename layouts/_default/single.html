@@ -11,8 +11,10 @@
         Published: {{ .PublishDate | time.Format ":date_long" }}
         </div>
     </section>
+    {{ $series := .Params.Series }}
+    {{ $headings := .Fragments.HeadingsMap }}
+    {{ if (or $series $headings) }}
     <section class="preface">
-        {{ $series := .Params.Series }}
         {{ if $series }}
         {{ $series_posts := sort (index .Site.Taxonomies.series $series) "PublishDate" "asc"}}
         {{ if gt ($series_posts | len) 1}}
@@ -26,11 +28,14 @@
         </div>
         {{ end }}
         {{ end }}
+        {{ if $headings }}
         <div id="contents">
             <h2>Contents</h2>
             {{ .TableOfContents }}
         </div>
+        {{ end }}
     </section>
+    {{ end }}
     {{ .Content }}
     {{ partial "comments.html" . }}
 </article>
