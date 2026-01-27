@@ -4,6 +4,10 @@ title = 'Julian Ferrone'
 timeZone = 'Australia/Sydney'
 enableGitInfo = true
 
+[params]
+  [params.author]
+    name = "Julian Ferrone" 
+
 [taxonomies]
 tag = "tags"
 series = "series"
