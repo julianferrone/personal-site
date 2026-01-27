@@ -4,9 +4,11 @@
         <h1> {{ .Title }} </h1>
         <div class="author">{{ .Site.Params.author.name }}</div>
         <div class="divider">❦</div>
+        {{ if .Params.summary }}
         <div class="summary">
         {{ .Summary }}
         </div>
+        {{ end }}
         <div class="imprint">
         Published: {{ .PublishDate | time.Format ":date_long" }}
         </div>
