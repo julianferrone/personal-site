@@ -261,9 +261,8 @@ td.title a:hover {
     text-decoration: underline;
 }
 
-td.tags {
-    width: 14rem;
-    font-size: 0.85rem;
+th.tags, td.tags {
+    display: none;
 }
 
 td.tags ul {
@@ -274,6 +273,14 @@ td.tags ul {
 
 td.tags li {
     display: inline;
+}
+
+@media (min-width: 801px) {
+    th.tags, td.tags {
+        width: 14rem;
+        font-size: 0.85rem;
+        display: table-cell;
+    }
 }
 
 td.tags li:not(:last-child)::after {
@@ -297,37 +304,6 @@ tr.post {
         td.title a {
             font-size: 1.2rem;
         }
-    }
-}
-
-
-
-/**************
-********* Post Title
-**************/
-
-
-/**************
-********* Post Tags
-**************/
-
-.post-tags {
-    display: none;
-}
-
-@media (min-width: 801px) {
-    .post-tags {
-        display: inline
-    }
-
-    .post-tags a {
-        font-size: 0.9em;
-        text-decoration: dotted underline;
-        color: var(--ink-subtle)
-    }
-
-    .post-tags a:hover {
-        color: var(--rubric)
     }
 }
 
