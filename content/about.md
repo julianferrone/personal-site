@@ -6,11 +6,16 @@ url: "/about"
 layout: "index.html"
 ---
 
-Hi, I'm Julian Ferrone.
-
-I currently work as a **Senior Implementation Consulting Analyst** at S&P Global. I automate our internal processes, teach my coworkers how to develop high-quality code, onboard clients, project manage POCs.
+Hi, I'm Julian Ferrone. I currently work as a **Senior Implementation Consulting Analyst** at S&P Global. I automate our internal processes, teach my coworkers how to develop high-quality code, onboard clients, project manage POCs.
 
 In short, I fix things.
+
+## Elsewhere
+
+- You can email me at **hi** at this domain
+- [Github](https://github.com/julianferrone)
+- [Instagram](https://instagram.com/julianferrone)
+- [X / Twitter](https://x.com/julianferrone)
 
 ## Education
 
