@@ -5,13 +5,20 @@
     {{ if (or $series $headings) }}
     <section class="preface">
         {{ if $series }}
-        {{ $series_posts := sort (index .Site.Taxonomies.series $series) "PublishDate" "asc"}}
-        {{ if gt ($series_posts | len) 1}}
+        {{ $seriesPosts := sort (index .Site.Taxonomies.series $series) "PublishDate" "asc"}}
+        {{ if gt ($seriesPosts | len) 1}}
         <div id="series">
             <h2>In This Series</h2>
             <ol>
-                {{ range $series_posts }}
-                {{ .Render "series_row" }}
+                {{ $currentPage := . }}
+                {{ range $seriesPosts }}
+                <li class="series-post">
+                    {{ if not (.Eq $currentPage) }}
+                    <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+                    {{ else }}
+                    <span class="current">{{ .Title }}</span>
+                    {{ end }}
+                </li>
                 {{ end }}
             </ol>
         </div>
