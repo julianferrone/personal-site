@@ -434,6 +434,10 @@ section.preface > * {
 
 .preface li {
     margin-bottom: 0.4rem;
+
+    .current {
+        font-style: italic;
+    }
 }
 
 /***********************************************************
