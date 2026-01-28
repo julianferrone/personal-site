@@ -21,6 +21,8 @@
         <span>·</span>
         <a href="/tags/">Tags</a> 
         <span>·</span>
+        <a href="/portfolio">Portfolio</a>
+        <span>·</span>
         <a href="/about">About</a>
         <span>·</span>
         <button class="responsive-svg" id="theme-switch" aria-label="Toggle Theme">
@@ -43,7 +45,7 @@
         {{ .Content }}
         </div>
         {{ end }}
-        {{ if .IsPage }}
+        {{ if eq .Type "posts" }}
         <div class="imprint">
         Published: {{ .PublishDate | time.Format ":date_long" }}
         </div>

@@ -3,21 +3,26 @@ date: '2025-05-05T17:15:08+10:00'
 draft: false
 title: 'About'
 url: "/about"
-layout: "index.html"
+type: "static"
+summary: "About me."
 ---
 
-Hi, I'm Julian Ferrone. I currently work as a **Senior Implementation Consulting Analyst** at S&P Global. I automate our internal processes, teach my coworkers how to develop high-quality code, onboard clients, project manage POCs.
+Hi, I'm Julian Ferrone. I currently work as a **Senior Specialist, Consulting**
+at S&P Global. I automate our internal processes, teach my coworkers how to
+develop high-quality code, and manage implementation/onboarding projects.
 
 In short, I fix things.
 
 ## Elsewhere
 
-- You can email me at **hi** at this domain
+- Feel free to shoot me an email at **hi** at this domain
 - [Github](https://github.com/julianferrone)
 - [Instagram](https://instagram.com/julianferrone)
 - [X / Twitter](https://x.com/julianferrone)
 
 ## Education
+
+### University of Technology, Sydney
 
 **Bachelor of Business, Bachelor of Creative Intelligence and Innovation**
 
@@ -27,16 +32,32 @@ In my business degree, I majored in Finance and sub-majored in Marketing and Law
   
 ## Expertise
 
-**Programming**: I've been writing Python for 11 years, 5 in a professional context. In my home projects, I prefer to use Rust, Haskell, Elixir, all of which I'm very comfortable with. I believe in the pursuit of quality, so I'm always studying to improve my craft.
+### Programming
 
-**Consulting**: Between my innovation work with BCII partners and my client-facing roles, I'm excellent at working with clients and solving problems.
+I've been writing Python for 11 years, 5 in a professional context. In my home projects, I prefer to use Rust, Haskell, Elixir, all of which I'm very comfortable with. I believe in the pursuit of quality, so I'm always studying to improve my craft.
+
+### Consulting
+
+Between my innovation work with BCII partners and my client-facing roles, I'm excellent at working with clients and solving problems.
 
 ## Enthusiasm
 
 I believe that the key to a well-rounded life is to target the ideal of the Renaissance Man, modelled by the *PISA* (Physical, Intellectual, Social, Artistic) approach.
 
-**Fencing**: The first sport I ever enjoyed. There's a silence that falls over you in a good bout. The world shrinks down to you, your opponent, the piste you stand on, and your blades. You probe each other for weaknesses, you maneuver back and forth, you see a little window of opportunity open up, get inside your opponents' tempo, you strike, you score! Pure flow state. It's absolutely exhilarating.
+### Fencing
 
-**Chess**: I play chess casually. My lack of opening prep has hurt my online ELO, but the daily puzzles are a good brain workout.
+Fencing is the first and only sport I've ever enjoyed. There's a silence that
+falls over you in a good bout. The world shrinks down to you, your opponent,
+the piste you stand on, and your blades. You probe each other for weaknesses,
+you maneuver back and forth, you see a little window of opportunity open up,
+get inside your opponents' tempo, you strike, you score! Pure flow state. It's
+absolutely exhilarating.
 
-**Piano**: My main creative outlet. I play mostly jazz, rock, and blues; I love to turn the amp up and shred a solo on an overdriven rock organ!
+### Chess
+
+I play chess casually. The daily puzzles are a good brain workout, and I'm
+currently working on improving my opening prep.
+
+### Piano
+
+I play mostly jazz, rock, and blues. I love to turn the amp up and shred a solo on an overdriven rock organ!
