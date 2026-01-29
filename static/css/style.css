@@ -440,6 +440,28 @@ section.preface > * {
     }
 }
 
+/* Table of Contents */
+
+#TableOfContents {
+    ol {
+        counter-reset: section;
+        list-style-type: none;
+    }
+
+    ol > li {
+        counter-increment: section;
+    }
+
+    ol > li::marker {
+        content: counters(section, ".") ". ";
+    }
+
+    ol > li:before {
+        content: "";
+    }
+}
+
+
 /***********************************************************
 ************************* Tag Index ************************
 ***********************************************************/

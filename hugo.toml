@@ -20,6 +20,9 @@ section = ["HTML"]
   [markup.highlight]
     noclasses = false
 
+  [markup.tableOfContents]
+    ordered = true
+
 [permalinks]
   [permalinks.page]
     posts = "/:contentbasename"
