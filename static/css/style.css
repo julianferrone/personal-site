@@ -19,6 +19,10 @@
     /* Typography */
     --font-body: "EB Garamond", "Garamond", "Caslon", serif;
     --font-mono: "Berkeley Mono", monospace;
+
+    /* Custom cursors */
+    --cursor-default: url("/img/cursor-fountain-pen.png"), auto;
+    --cursor-pointer: url("/img/cursor-glove-point.png"), auto;
 }
 
 :root[data-theme="dark"] {
@@ -32,7 +36,6 @@
     --code-bg: #272625
 }
 
-
 /**************
 ********* Elements
 **************/
@@ -44,6 +47,7 @@ html {
     font-family: var(--font-body);
     line-height: 1.6;
     scroll-behavior: smooth;
+    cursor: var(--cursor-default);
 }
 
 body {
@@ -159,7 +163,7 @@ article>*,
 }
 
 button:hover {
-    cursor: pointer;
+    cursor: var(--cursor-default);
 }
 
 
@@ -685,6 +689,7 @@ a {
 
 a:hover {
     color: var(--rubric);
+    cursor: var(--cursor-pointer);
 }
 
 /***********************************************************
