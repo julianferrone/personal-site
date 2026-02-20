@@ -55,5 +55,6 @@
 <!-- Twitter metadata (used by other websites as well) -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ .Title }}">
-<meta name="twitter:description" content="{{ with .Description }}{{ . }}{{ else }}{{if .IsPage}}{{ .Summary }}{{ else }}{{ with .Site.Params.description }}{{ . }}{{ end }}{{ end }}{{ end -}}">
+{{- $description := or .Description (and .IsPage .Summary) .Site.Params.description -}}
+<meta name="twitter:description" content="{{ $description }}">
 <meta name="twitter:image" content="{{$img.Permalink}}">
